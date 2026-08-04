@@ -22,3 +22,20 @@ This defines the smallest complete experience that fulfills D.AI.SY's mission wh
 ### Scope Rule
 
 If a feature does not directly support this experience, it will be considered for a future version instead of Version 1.
+---
+
+## Decision 002 — Target Audience (Version 1)
+
+**Status:** ✅ Approved
+
+### Statement
+
+D.AI.SY Version 1 is designed for people who feel mentally overwhelmed by complexity and need help organizing their thinking into clear, manageable action.
+
+### Why
+
+Keeping the initial audience focused allows D.AI.SY to solve one problem exceptionally well before expanding into additional use cases and specialized audiences.
+
+### Scope Rule
+
+Version 1 will prioritize cognitive clarity, planning, and agency-building over specialized workflows or industry-specific features.
