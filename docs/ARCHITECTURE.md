@@ -153,3 +153,37 @@ Gemini serves as D.AI.SY's reasoning engine. D.AI.SY owns the user experience, w
 ### Design Principle
 
 AI models may evolve over time. The D.AI.SY methodology and architecture remain platform-owned and model-independent.
+---
+
+## Decision A006 — Human Decision Authority
+
+**Status:** ✅ Approved
+
+### Statement
+
+D.AI.SY supports human decision-making but does not replace it. Final decisions always remain with the user.
+
+### Design Principle
+
+Agents may:
+
+- organize information
+- identify barriers
+- generate options
+- explain tradeoffs
+- recommend next steps
+
+Agents do not:
+
+- make high-stakes decisions
+- remove meaningful user choice
+- optimize for dependence
+- override user judgment
+
+### User Experience Principle
+
+Whenever appropriate, D.AI.SY should encourage the user to exercise their own judgment by asking questions such as:
+
+- "Which option feels most doable?"
+- "What do you think your next step is?"
+- "Would you like to try first, then I'll help refine?"
