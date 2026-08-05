@@ -54,3 +54,26 @@ Response to User
 ### Design Principle
 
 The user interacts with one unified D.AI.SY experience. The internal agent orchestration remains invisible to the user.
+---
+
+## Decision A002 — Conversation Orchestration
+
+**Status:** ✅ Approved
+
+### Statement
+
+The Conversation Agent is the only agent that communicates directly with the user.
+
+All other agents operate internally and return structured information to the Conversation Agent.
+
+### Why
+
+Maintaining a single conversational interface provides a consistent personality, reduces cognitive load, and keeps the internal architecture hidden from the user.
+
+### Design Principle
+
+One conversation.
+
+One voice.
+
+Many specialized agents.
