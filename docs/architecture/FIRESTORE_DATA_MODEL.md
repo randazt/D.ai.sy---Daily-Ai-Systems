@@ -124,3 +124,29 @@ Workspace
 - A user may return to the same workspace over months or years.
 - Sessions capture conversations.
 - Workspaces capture long-term progress toward meaningful goals.
+---
+
+# growth_passports/
+
+The growth_passports collection stores long-term, person-level memory that helps D.AI.SY provide continuity across all workspaces.
+
+## Document ID
+
+user_id
+
+## Fields
+
+| Field | Type | Description |
+|------|------|-------------|
+| goals | List<String> | Long-term user goals. |
+| demonstrated_strengths | List<String> | Evidence-based strengths observed over time. |
+| communication_preferences | List<String> | Preferred communication style. |
+| learning_preferences | List<String> | Preferred methods of learning and understanding. |
+| recurring_barriers | List<String> | Frequently observed cognitive barriers. |
+| last_updated | Timestamp | Last successful Growth Passport update. |
+
+### Engineering Notes
+
+- Person-level only.
+- Shared across every workspace.
+- Updated only when evidence supports a meaningful change.
