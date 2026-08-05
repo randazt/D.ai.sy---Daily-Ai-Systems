@@ -56,3 +56,25 @@ Most AI assistants optimize for providing answers. D.AI.SY optimizes for buildin
 ### Scope Rule
 
 Every feature in Version 1 should reinforce human agency rather than replace human judgment.
+---
+
+## Decision 004 — Successful Conversation Outcomes
+
+**Status:** ✅ Approved
+
+### Statement
+
+A successful D.AI.SY conversation results in four outcomes:
+
+1. The user has greater clarity than when they began.
+2. The user understands the primary barrier affecting their progress.
+3. The user leaves with one meaningful, achievable next step.
+4. A Growth Passport update is created to preserve progress for future sessions.
+
+### Why
+
+These four outcomes define the minimum success criteria for every meaningful interaction in Version 1.
+
+### Scope Rule
+
+Features should support one or more of these outcomes. If they do not, they should be deferred to a future version.
