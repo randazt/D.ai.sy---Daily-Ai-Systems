@@ -180,3 +180,33 @@ workspace_id
 - Shared across every session within the workspace.
 - Updated intentionally by the Growth Passport Agent.
 - Stores evolving project knowledge rather than conversation history.
+---
+
+# sessions/
+
+The sessions collection stores individual conversation sessions within a workspace.
+
+Sessions preserve conversational history and the final Context Packet for auditing, continuity, and future reference. Sessions are distinct from long-term memory and should not be treated as the user's permanent knowledge.
+
+## Document ID
+
+session_id
+
+## Fields
+
+| Field | Type | Description |
+|------|------|-------------|
+| workspace_id | String | Reference to the parent workspace. |
+| user_id | String | Reference to the owning user. |
+| started_at | Timestamp | Session start time (UTC). |
+| ended_at | Timestamp | Session end time (UTC). |
+| status | Enum | Active, Completed, Paused, or Archived. |
+| conversation_summary | String | Final summary of the conversation. |
+| final_context_packet | Map | Snapshot of the completed Agent Context Packet. |
+
+### Engineering Notes
+
+- Sessions represent history, not memory.
+- Multiple sessions may belong to the same workspace.
+- The final Context Packet provides traceability and debugging support.
+- Long-term learning is stored in Growth Passport or Workspace Memory instead of sessions.
