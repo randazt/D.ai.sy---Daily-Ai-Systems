@@ -210,3 +210,38 @@ session_id
 - Multiple sessions may belong to the same workspace.
 - The final Context Packet provides traceability and debugging support.
 - Long-term learning is stored in Growth Passport or Workspace Memory instead of sessions.
+---
+
+# configuration/
+
+The configuration collection stores application-wide settings, feature flags, prompts, and platform configuration that are not specific to any individual user.
+
+This collection supports operational flexibility without requiring code changes for common configuration updates.
+
+## Document ID
+
+configuration_key
+
+## Example Documents
+
+- application_settings
+- feature_flags
+- supported_modes
+- model_configuration
+- prompt_templates
+
+## Example Fields
+
+| Field | Type | Description |
+|------|------|-------------|
+| enabled | Boolean | Whether the feature or configuration is active. |
+| value | Any | Configuration value. |
+| updated_at | Timestamp | Last configuration update. |
+| updated_by | String | Administrative identifier responsible for the change. |
+
+### Engineering Notes
+
+- Contains platform-level configuration only.
+- Never stores user-specific information.
+- Supports gradual feature rollout and operational tuning.
+- Changes should be versioned and auditable.
