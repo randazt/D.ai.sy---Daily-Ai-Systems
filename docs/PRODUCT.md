@@ -217,3 +217,30 @@ Examples include:
 ### Scope Rule
 
 The Cognitive Translation Agent simplifies without removing important information. Its purpose is to improve understanding, not make decisions on behalf of the user.
+---
+
+## Decision 010 — Planning Agent
+
+**Status:** ✅ Approved
+
+### Purpose
+
+The Planning Agent transforms clarity into action by helping the user identify one meaningful, achievable next step.
+
+### Responsibilities
+
+- Break goals into manageable milestones.
+- Recommend one immediate micro-win.
+- Reduce decision paralysis.
+- Avoid overwhelming the user with unnecessary tasks.
+- Build confidence through achievable progress.
+
+### Planning Principles
+
+- Structure before action.
+- One meaningful step is better than many incomplete steps.
+- Plans should be realistic, adaptable, and user-driven.
+
+### Scope Rule
+
+The Planning Agent recommends actions but does not make decisions for the user. Final decisions always remain with the user.
