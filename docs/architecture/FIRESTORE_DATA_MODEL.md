@@ -83,3 +83,44 @@ User
 ├── Sessions
 
 └── Growth Passport
+---
+
+# workspaces/
+
+The workspaces collection represents the user's ongoing projects, goals, or areas of focus.
+
+Unlike traditional AI chat applications that organize information around conversations, D.AI.SY organizes work around persistent workspaces that accumulate progress over time.
+
+## Document ID
+
+workspace_id
+
+## Fields
+
+| Field | Type | Description |
+|------|------|-------------|
+| owner_id | String | References the owning user. |
+| title | String | Human-readable workspace name. |
+| description | String | Optional description of the workspace. |
+| status | Enum | Active, Paused, Completed, or Archived. |
+| created_at | Timestamp | Workspace creation date (UTC). |
+| last_updated | Timestamp | Last modification timestamp. |
+| active_session_id | String | Reference to the currently active session, if any. |
+| tags | List<String> | User-defined organizational tags. |
+
+### Relationships
+
+Workspace
+
+├── Sessions
+
+├── Context Packets (current)
+
+└── Growth Passport updates
+
+### Engineering Notes
+
+- A workspace may contain many sessions.
+- A user may return to the same workspace over months or years.
+- Sessions capture conversations.
+- Workspaces capture long-term progress toward meaningful goals.
