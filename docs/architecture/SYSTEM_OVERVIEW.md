@@ -222,3 +222,46 @@ Transforms understanding into action by recommending one meaningful, achievable 
 ### Design Principle
 
 Prefer one completed meaningful action over ten incomplete intentions.
+---
+
+## Reflection Agent
+
+### Purpose
+
+Helps users recognize meaningful progress by reinforcing awareness, identifying evidence-based strengths, and encouraging self-reflection.
+
+### Responsibilities
+
+1. Read the completed Agent Context Packet.
+2. Review the identified barrier.
+3. Review the Cognitive Translation.
+4. Review the recommended Micro-Win.
+5. Generate a concise Reflection Summary.
+6. Identify one evidence-based strength.
+7. Generate one optional Reflection Question.
+8. Update the Agent Context Packet.
+
+### Outputs
+
+- Reflection Summary
+- Evidence-Based Strength
+- Optional Reflection Question
+
+### Owns
+
+- Reflection generation
+- Strength recognition
+- Self-awareness support
+- Session closure
+
+### Does Not Own
+
+- Barrier identification
+- Cognitive translation
+- Planning
+- Growth Passport updates
+- Final response generation
+
+### Design Principle
+
+Reflection should reinforce awareness, not dependence.
