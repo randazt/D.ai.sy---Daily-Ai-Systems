@@ -149,3 +149,94 @@ After the response is generated:
 Return the response to the user.
 
 Await the next interaction.
+---
+
+# Execution Rules
+
+## Context Packet
+
+- A single Agent Context Packet exists for each active session.
+- The Conversation Agent creates and manages the packet.
+- Every specialist agent receives the latest packet.
+- Every specialist agent returns the updated packet.
+
+---
+
+## Agent Ownership
+
+Each specialist agent:
+
+- Reads the entire Context Packet.
+- Updates only the section it owns.
+- Must never modify another agent's section.
+
+---
+
+## Failure Handling
+
+If an agent cannot produce a confident result:
+
+- Record the uncertainty.
+- Preserve previous context.
+- Return control to the Conversation Agent.
+
+The Conversation Agent may:
+
+- ask a clarifying question,
+- continue with reduced confidence,
+- or bypass the uncertain result.
+
+---
+
+## Memory Lifecycle
+
+Read
+
+User Profile
+
+↓
+
+Growth Passport
+
+↓
+
+Workspace Memory
+
+↓
+
+Conversation
+
+↓
+
+Context Packet
+
+↓
+
+Specialist Agents
+
+↓
+
+Final Response
+
+↓
+
+Update Workspace Memory
+
+↓
+
+Update Growth Passport
+
+↓
+
+Archive Session
+
+---
+
+## Design Goals
+
+- Preserve user agency.
+- Reduce cognitive load.
+- Avoid fabricated conclusions.
+- Keep reasoning transparent.
+- Fail gracefully.
+- Maintain a single conversational experience.
