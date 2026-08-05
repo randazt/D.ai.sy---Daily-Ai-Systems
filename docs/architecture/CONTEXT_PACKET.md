@@ -125,3 +125,25 @@ It captures the primary obstacle preventing meaningful progress during the curre
 - Confidence reflects the quality of available evidence, not certainty.
 - Evidence should reference observable conversation content rather than assumptions.
 - Downstream agents should treat the primary barrier as the current working hypothesis.
+---
+
+# Translation
+
+The Translation section is owned by the Cognitive Translation Agent.
+
+It transforms the user's thoughts into a structured understanding that reduces cognitive load while preserving important meaning.
+
+| Field | Type | Required | Owner | Description |
+|------|------|----------|-------|-------------|
+| structured_summary | String | Yes | Cognitive Translation Agent | Concise structured explanation of the user's situation. |
+| key_concepts | List<String> | Yes | Cognitive Translation Agent | Primary concepts extracted from the conversation. |
+| known_information | List<String> | Yes | Cognitive Translation Agent | Facts and information established during the session. |
+| unknown_information | List<String> | Optional | Cognitive Translation Agent | Important missing information that may affect planning. |
+| simplified_problem | String | Yes | Cognitive Translation Agent | Clear statement of the problem after cognitive translation. |
+
+### Engineering Notes
+
+- Preserve nuance while improving clarity.
+- Never invent missing information.
+- Unknown information should remain explicitly identified rather than assumed.
+- The simplified problem becomes the primary planning input.
