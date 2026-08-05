@@ -85,3 +85,67 @@ Generate Final Response
 ↓
 
 Return Response to User
+---
+
+# Conversation Lifecycle
+
+Each conversation follows the same execution pipeline.
+
+## Phase 1 — Session Initialization
+
+1. Receive user message.
+2. Authenticate user.
+3. Identify active workspace.
+4. Load User Profile.
+5. Load Growth Passport.
+6. Load Workspace Memory.
+7. Create Agent Context Packet.
+
+---
+
+## Phase 2 — Cognitive Processing
+
+The Context Packet is processed sequentially by specialized agents.
+
+1. Barrier Detection Agent
+2. Cognitive Translation Agent
+3. Planning Agent
+4. Reflection Agent
+5. Growth Passport Agent
+
+Each agent:
+
+- Reads the complete Context Packet.
+- Updates only its owned section.
+- Returns the updated packet.
+
+---
+
+## Phase 3 — Response Generation
+
+The Conversation Agent:
+
+- Reviews the completed Context Packet.
+- Synthesizes agent outputs.
+- Produces a single coherent response.
+- Preserves D.AI.SY's voice and philosophy.
+
+---
+
+## Phase 4 — Persistence
+
+After the response is generated:
+
+- Update Workspace Memory.
+- Update Growth Passport.
+- Store completed Context Packet.
+- Store Session summary.
+- Update workspace metadata.
+
+---
+
+## Phase 5 — Completion
+
+Return the response to the user.
+
+Await the next interaction.
