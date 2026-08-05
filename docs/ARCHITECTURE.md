@@ -77,3 +77,22 @@ One conversation.
 One voice.
 
 Many specialized agents.
+---
+
+## Decision A003 — Agent Communication
+
+**Status:** ✅ Approved
+
+### Statement
+
+Agents communicate using structured data rather than natural language.
+
+### Why
+
+Structured communication improves consistency, simplifies debugging, reduces ambiguity, and allows each agent to focus on its specific responsibility.
+
+### Design Principle
+
+Agents exchange structured outputs.
+
+Only the Conversation Agent communicates in natural language with the user.
