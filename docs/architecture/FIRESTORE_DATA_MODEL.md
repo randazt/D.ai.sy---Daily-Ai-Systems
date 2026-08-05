@@ -150,3 +150,33 @@ user_id
 - Person-level only.
 - Shared across every workspace.
 - Updated only when evidence supports a meaningful change.
+---
+
+# workspace_memory/
+
+The workspace_memory collection stores long-term, project-specific memory for each workspace.
+
+Unlike the Growth Passport, which captures person-level growth, Workspace Memory preserves the evolving context of a single project over time.
+
+## Document ID
+
+workspace_id
+
+## Fields
+
+| Field | Type | Description |
+|------|------|-------------|
+| current_milestone | String | The active milestone for the workspace. |
+| completed_milestones | List<String> | Milestones completed over the life of the workspace. |
+| key_decisions | List<String> | Important project decisions that should persist across sessions. |
+| open_questions | List<String> | Questions that remain unresolved. |
+| next_agreed_step | String | The next agreed action for this workspace. |
+| important_context | String | Persistent context that helps future conversations. |
+| last_updated | Timestamp | Last Workspace Memory update. |
+
+### Engineering Notes
+
+- Workspace-specific only.
+- Shared across every session within the workspace.
+- Updated intentionally by the Growth Passport Agent.
+- Stores evolving project knowledge rather than conversation history.
