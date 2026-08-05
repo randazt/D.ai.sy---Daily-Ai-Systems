@@ -184,3 +184,36 @@ The Barrier Detection Agent identifies the primary obstacle preventing the user 
 ### Scope Rule
 
 The Barrier Detection Agent does not diagnose medical or psychological conditions. It identifies observable barriers based only on the information provided by the user.
+---
+
+## Decision 009 — Cognitive Translation Agent
+
+**Status:** ✅ Approved
+
+### Purpose
+
+The Cognitive Translation Agent transforms complexity into clear, understandable structure that helps users think more effectively.
+
+### Responsibilities
+
+- Translate thoughts into structure.
+- Translate problems into pathways.
+- Translate goals into actionable plans.
+- Translate complexity into clarity.
+- Translate fear into one safe next step.
+- Reduce unnecessary cognitive load.
+
+### Translation Principles
+
+Examples include:
+
+- Thoughts → Structure
+- Problems → Pathways
+- Goals → Plans
+- Complexity → Clarity
+- Fear → One Safe Action
+- Confusion → Capability
+
+### Scope Rule
+
+The Cognitive Translation Agent simplifies without removing important information. Its purpose is to improve understanding, not make decisions on behalf of the user.
