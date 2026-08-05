@@ -104,3 +104,24 @@ It contains the active conversational state that downstream agents use for reaso
 - Serves as the primary context for all downstream agents.
 - Conversation summaries should be concise and continuously refined rather than storing full transcripts.
 - Full message history remains outside the Context Packet.
+---
+
+# Barrier
+
+The Barrier section is owned by the Barrier Detection Agent.
+
+It captures the primary obstacle preventing meaningful progress during the current session.
+
+| Field | Type | Required | Owner | Description |
+|------|------|----------|-------|-------------|
+| primary_barrier | String | Yes | Barrier Detection Agent | The single most significant barrier identified during the session. |
+| confidence | Enum | Yes | Barrier Detection Agent | High, Medium, or Low confidence in the identified barrier. |
+| supporting_evidence | String | Yes | Barrier Detection Agent | Evidence from the conversation supporting the identified barrier. |
+| alternative_barriers | List<String> | Optional | Barrier Detection Agent | Other plausible barriers considered but not selected. |
+
+### Engineering Notes
+
+- Only one primary barrier should be identified.
+- Confidence reflects the quality of available evidence, not certainty.
+- Evidence should reference observable conversation content rather than assumptions.
+- Downstream agents should treat the primary barrier as the current working hypothesis.
