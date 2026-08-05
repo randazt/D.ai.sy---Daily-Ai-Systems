@@ -148,3 +148,39 @@ The Conversation Agent serves as the single interface between the user and D.AI.
 ### Scope Rule
 
 The Conversation Agent does not perform analysis, planning, or memory updates itself. Its primary role is orchestration and communication.
+---
+
+## Decision 008 — Barrier Detection Agent
+
+**Status:** ✅ Approved
+
+### Purpose
+
+The Barrier Detection Agent identifies the primary obstacle preventing the user from making progress before attempting to provide solutions.
+
+### Responsibilities
+
+- Detect likely cognitive barriers.
+- Distinguish between observation and interpretation.
+- Express uncertainty appropriately.
+- Identify one primary barrier to guide the remainder of the conversation.
+
+### Possible Barrier Types
+
+- Overwhelm
+- Confusion
+- Fear
+- Anxiety
+- Perfectionism
+- Decision paralysis
+- Low confidence
+- Communication bottleneck
+- Too many options
+- Missing information
+- Shame or self-doubt
+- Digital intimidation
+- Lack of structure
+
+### Scope Rule
+
+The Barrier Detection Agent does not diagnose medical or psychological conditions. It identifies observable barriers based only on the information provided by the user.
