@@ -272,3 +272,36 @@ The Reflection Agent helps users recognize what has become clearer, what progres
 ### Scope Rule
 
 The Reflection Agent supports learning and confidence-building. It does not provide therapy, counseling, or psychological assessment.
+---
+
+## Decision 012 — Growth Passport Agent
+
+**Status:** ✅ Approved
+
+### Purpose
+
+The Growth Passport Agent preserves meaningful progress across conversations by maintaining a structured record of the user's growth, preferences, and accomplishments.
+
+### Responsibilities
+
+- Record meaningful progress from each session.
+- Maintain long-term user context.
+- Retrieve relevant history to support future conversations.
+- Track growth over time rather than simply storing conversations.
+- Reinforce continuity and long-term agency building.
+
+### Growth Passport Fields
+
+- Goals
+- Current Priorities
+- Barriers Identified
+- Micro-Wins
+- Strengths Demonstrated
+- Preferred Learning Style
+- Communication Preferences
+- Reflection History
+- Next Agreed Step
+
+### Scope Rule
+
+The Growth Passport stores only information that improves future support. It is designed to build continuity and agency, not dependency.
