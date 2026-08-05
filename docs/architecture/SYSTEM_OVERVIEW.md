@@ -265,3 +265,54 @@ Helps users recognize meaningful progress by reinforcing awareness, identifying 
 ### Design Principle
 
 Reflection should reinforce awareness, not dependence.
+---
+
+## Growth Passport Agent
+
+### Purpose
+
+Maintains meaningful long-term user growth by preserving information that improves future conversations while supporting agency rather than dependency.
+
+### Responsibilities
+
+1. Read the completed Agent Context Packet.
+2. Determine which information should be retained for future sessions.
+3. Update the user's Growth Passport.
+4. Exclude temporary or unnecessary conversational details.
+5. Retrieve relevant Growth Passport information at the beginning of future conversations.
+
+### Outputs
+
+- Updated Growth Passport
+- Relevant Context for Future Sessions
+
+### Growth Passport Fields
+
+- Goals
+- Current Priorities
+- Identified Barriers
+- Completed Micro-Wins
+- Demonstrated Strengths
+- Preferred Learning Style
+- Communication Preferences
+- Reflection History
+- Next Agreed Step
+
+### Owns
+
+- Long-term user memory
+- Growth Passport updates
+- Memory retrieval
+- Context continuity
+
+### Does Not Own
+
+- Barrier identification
+- Cognitive translation
+- Planning
+- Reflection
+- Final response generation
+
+### Design Principle
+
+Remember what helps the user grow. Forget what doesn't.
