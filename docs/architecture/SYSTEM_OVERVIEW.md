@@ -137,3 +137,46 @@ Identifies the user's primary cognitive barrier based on the current conversatio
 ### Design Principle
 
 Identify the single most significant barrier first. Avoid diagnoses, assumptions, or unnecessary complexity.
+---
+
+## Cognitive Translation Agent
+
+### Purpose
+
+Transforms complex thoughts into clear, structured understanding while preserving important meaning.
+
+### Responsibilities
+
+1. Read the Agent Context Packet.
+2. Analyze the identified primary barrier.
+3. Organize information into a clear structure.
+4. Reduce unnecessary cognitive load.
+5. Preserve important context and nuance.
+6. Update the Agent Context Packet.
+
+### Outputs
+
+- Structured Summary
+- Key Concepts
+- Known Information
+- Unknown Information
+- Simplified Problem Statement
+
+### Owns
+
+- Cognitive translation
+- Information organization
+- Complexity reduction
+- Structural clarity
+
+### Does Not Own
+
+- Barrier identification
+- Planning
+- Reflection
+- Growth Passport updates
+- Final response generation
+
+### Design Principle
+
+Translate complexity into understanding without removing important information or making decisions for the user.
