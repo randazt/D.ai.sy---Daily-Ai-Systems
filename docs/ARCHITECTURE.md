@@ -96,3 +96,29 @@ Structured communication improves consistency, simplifies debugging, reduces amb
 Agents exchange structured outputs.
 
 Only the Conversation Agent communicates in natural language with the user.
+---
+
+## Decision A004 — Agent Context Packet
+
+**Status:** ✅ Approved
+
+### Statement
+
+All agents exchange information using a shared Agent Context Packet. Each agent may read existing fields and append new information before passing the packet to the next agent.
+
+### Version 1 Fields
+
+- Active Mode
+- User Goal
+- Conversation Summary
+- Primary Barrier
+- Barrier Confidence
+- Cognitive Translation
+- Suggested Micro-Win
+- Reflection Prompt
+- Growth Passport Update
+- Timestamp
+
+### Design Principle
+
+Each agent contributes to a shared understanding of the conversation rather than maintaining separate, isolated context.
