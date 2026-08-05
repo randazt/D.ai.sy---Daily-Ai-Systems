@@ -189,3 +189,28 @@ It captures meaningful progress made during the session and reinforces the user'
 - Avoid generic praise or exaggerated encouragement.
 - The reflection should reinforce awareness rather than dependence.
 - Awareness notes are intended for internal use and are not shown directly to the user.
+---
+
+# Growth Passport
+
+The Growth Passport section is owned by the Growth Passport Agent.
+
+It contains long-term information that improves future conversations by preserving meaningful user growth while avoiding unnecessary retention of conversational details.
+
+| Field | Type | Required | Owner | Description |
+|------|------|----------|-------|-------------|
+| updated_goals | List<String> | Optional | Growth Passport Agent | New or revised long-term goals identified during the session. |
+| updated_priorities | List<String> | Optional | Growth Passport Agent | Current priorities that remain relevant across sessions. |
+| completed_micro_wins | List<String> | Optional | Growth Passport Agent | Meaningful actions completed by the user. |
+| demonstrated_strengths | List<String> | Optional | Growth Passport Agent | Evidence-based strengths consistently demonstrated over time. |
+| communication_preferences | List<String> | Optional | Growth Passport Agent | User communication preferences learned through interaction. |
+| learning_preferences | List<String> | Optional | Growth Passport Agent | Preferred ways the user learns or processes information. |
+| next_agreed_step | String | Optional | Growth Passport Agent | The next agreed action that should be recalled in future sessions. |
+| memory_update_notes | String | Optional | Growth Passport Agent | Internal reasoning explaining why memory was updated. |
+
+### Engineering Notes
+
+- Preserve only information that benefits future conversations.
+- Do not store temporary thoughts or unnecessary conversational details.
+- Growth Passport updates should be intentional and evidence-based.
+- The user-facing Growth Passport is generated from this underlying memory profile.
