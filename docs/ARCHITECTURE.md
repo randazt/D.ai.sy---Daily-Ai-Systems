@@ -122,3 +122,34 @@ All agents exchange information using a shared Agent Context Packet. Each agent 
 ### Design Principle
 
 Each agent contributes to a shared understanding of the conversation rather than maintaining separate, isolated context.
+---
+
+## Decision A005 — Platform Responsibility
+
+**Status:** ✅ Approved
+
+### Statement
+
+Gemini serves as D.AI.SY's reasoning engine. D.AI.SY owns the user experience, workflow orchestration, cognitive methodology, agent coordination, and Growth Passport.
+
+### Gemini Responsibilities
+
+- Natural language understanding
+- Reasoning
+- Summarization
+- Structured generation
+
+### D.AI.SY Responsibilities
+
+- User experience
+- Agent orchestration
+- Cognitive Translation methodology
+- Barrier Detection workflow
+- Planning workflow
+- Reflection workflow
+- Growth Passport management
+- Long-term continuity
+
+### Design Principle
+
+AI models may evolve over time. The D.AI.SY methodology and architecture remain platform-owned and model-independent.
