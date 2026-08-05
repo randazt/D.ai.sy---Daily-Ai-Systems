@@ -60,3 +60,25 @@ Each agent may only modify the section(s) it owns.
 Agents may read any section.
 
 The Conversation Agent is responsible for coordinating the complete packet throughout the workflow.
+---
+
+# Session
+
+The Session section is owned by the Conversation Agent.
+
+It contains information required to identify the active conversation and user.
+
+| Field | Type | Required | Owner | Description |
+|------|------|----------|-------|-------------|
+| session_id | UUID | Yes | Conversation Agent | Unique identifier for the current conversation session. |
+| user_id | UUID | Yes | Conversation Agent | Authenticated user identifier. |
+| timestamp | DateTime (UTC) | Yes | Conversation Agent | Time the packet was last updated. |
+| active_mode | Enum | Yes | Conversation Agent | Current interaction mode (Default, Guided, Planning, Reflection, etc.). |
+| workspace_name | String | Yes | Conversation Agent | Human-readable name for the current workspace or session. |
+
+### Engineering Notes
+
+- Created at the beginning of every session.
+- Updated by the Conversation Agent.
+- Read by every downstream agent.
+- Never modified by specialist agents.
