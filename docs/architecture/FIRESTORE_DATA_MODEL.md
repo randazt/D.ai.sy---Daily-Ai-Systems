@@ -51,3 +51,35 @@ Session data is temporary.
 Growth Passport data is persistent.
 
 Agents retrieve only the information required for the current workflow.
+---
+
+# users/
+
+The users collection stores identity information required to authenticate and personalize the D.AI.SY experience.
+
+Each authenticated user owns one or more workspaces and one Growth Passport.
+
+## Document ID
+
+user_id
+
+## Fields
+
+| Field | Type | Description |
+|------|------|-------------|
+| display_name | String | User's preferred display name. |
+| email | String | Authentication email address. |
+| created_at | Timestamp | Account creation date (UTC). |
+| last_active | Timestamp | Last time the user interacted with D.AI.SY. |
+| default_workspace | String | ID of the workspace opened by default. |
+| preferences | Map | User-level application preferences. |
+
+### Relationships
+
+User
+
+├── Workspaces
+
+├── Sessions
+
+└── Growth Passport
