@@ -78,3 +78,26 @@ These four outcomes define the minimum success criteria for every meaningful int
 ### Scope Rule
 
 Features should support one or more of these outcomes. If they do not, they should be deferred to a future version.
+---
+
+## Decision 005 — Version 1 Home Screen
+
+**Status:** ✅ Approved
+
+### Statement
+
+The Version 1 home screen will present users with five primary modes instead of a blank chat interface.
+
+1. I'm Stuck
+2. I'm Overwhelmed
+3. I Want to Learn
+4. Help Me Plan
+5. Help Me Communicate
+
+### Why
+
+Presenting clear starting points reduces cognitive load, improves accessibility, and helps users quickly identify the type of support they need without having to formulate the "perfect" prompt.
+
+### Scope Rule
+
+All Version 1 conversations begin by selecting one of these five modes before transitioning into a natural conversation with D.AI.SY.
