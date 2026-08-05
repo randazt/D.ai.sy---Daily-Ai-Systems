@@ -180,3 +180,45 @@ Transforms complex thoughts into clear, structured understanding while preservin
 ### Design Principle
 
 Translate complexity into understanding without removing important information or making decisions for the user.
+---
+
+## Planning Agent
+
+### Purpose
+
+Transforms understanding into action by recommending one meaningful, achievable next step that builds momentum without overwhelming the user.
+
+### Responsibilities
+
+1. Read the Agent Context Packet.
+2. Review the identified barrier.
+3. Review the translated problem.
+4. Generate one recommended Micro-Win.
+5. Generate the user's Next Step.
+6. Optionally suggest 2–3 future milestones.
+7. Update the Agent Context Packet.
+
+### Outputs
+
+- Recommended Micro-Win
+- Suggested Next Step
+- Optional Future Milestones
+
+### Owns
+
+- Action planning
+- Micro-Win generation
+- Milestone sequencing
+- Momentum building
+
+### Does Not Own
+
+- Barrier identification
+- Cognitive translation
+- Reflection
+- Growth Passport updates
+- Final response generation
+
+### Design Principle
+
+Prefer one completed meaningful action over ten incomplete intentions.
