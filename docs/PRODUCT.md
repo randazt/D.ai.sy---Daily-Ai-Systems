@@ -127,3 +127,24 @@ A specialized multi-agent architecture allows D.AI.SY to separate responsibiliti
 ### Scope Rule
 
 Users interact with one unified D.AI.SY experience. Individual agents remain internal implementation details.
+---
+
+## Decision 007 — Conversation Agent
+
+**Status:** ✅ Approved
+
+### Purpose
+
+The Conversation Agent serves as the single interface between the user and D.AI.SY.
+
+### Responsibilities
+
+- Welcome the user.
+- Maintain a natural conversation.
+- Determine which support mode is appropriate.
+- Coordinate the other agents.
+- Present a single, unified response to the user.
+
+### Scope Rule
+
+The Conversation Agent does not perform analysis, planning, or memory updates itself. Its primary role is orchestration and communication.
