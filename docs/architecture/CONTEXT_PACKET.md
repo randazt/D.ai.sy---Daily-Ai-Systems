@@ -82,3 +82,25 @@ It contains information required to identify the active conversation and user.
 - Updated by the Conversation Agent.
 - Read by every downstream agent.
 - Never modified by specialist agents.
+---
+
+# Conversation
+
+The Conversation section is owned by the Conversation Agent.
+
+It contains the active conversational state that downstream agents use for reasoning.
+
+| Field | Type | Required | Owner | Description |
+|------|------|----------|-------|-------------|
+| latest_user_message | String | Yes | Conversation Agent | The user's most recent message. |
+| conversation_summary | String | Yes | Conversation Agent | Running summary of the current session. |
+| session_goal | String | Optional | Conversation Agent | The primary objective for the current workspace. |
+| conversation_status | Enum | Yes | Conversation Agent | Active, Completed, Paused, or Archived. |
+| support_mode | Enum | Yes | Conversation Agent | Current support approach (Default, Guided, Planning, Reflection, Brainstorming). |
+
+### Engineering Notes
+
+- Updated after every user message.
+- Serves as the primary context for all downstream agents.
+- Conversation summaries should be concise and continuously refined rather than storing full transcripts.
+- Full message history remains outside the Context Packet.
