@@ -168,3 +168,24 @@ It converts structured understanding into one achievable action that helps the u
 - Avoid overwhelming users with long task lists.
 - Future milestones should remain flexible rather than prescriptive.
 - Planning should support agency by offering guidance, not making decisions for the user.
+---
+
+# Reflection
+
+The Reflection section is owned by the Reflection Agent.
+
+It captures meaningful progress made during the session and reinforces the user's awareness without creating dependency.
+
+| Field | Type | Required | Owner | Description |
+|------|------|----------|-------|-------------|
+| reflection_summary | String | Yes | Reflection Agent | Concise summary of the user's progress during the session. |
+| evidence_based_strength | String | Yes | Reflection Agent | A genuine strength demonstrated during the conversation, supported by evidence. |
+| reflection_question | String | Optional | Reflection Agent | One optional question that encourages continued self-reflection. |
+| awareness_notes | String | Optional | Reflection Agent | Internal observations that may support future Growth Passport updates. |
+
+### Engineering Notes
+
+- Reflection should be grounded in evidence from the current session.
+- Avoid generic praise or exaggerated encouragement.
+- The reflection should reinforce awareness rather than dependence.
+- Awareness notes are intended for internal use and are not shown directly to the user.
