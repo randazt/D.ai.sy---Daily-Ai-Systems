@@ -101,3 +101,29 @@ Presenting clear starting points reduces cognitive load, improves accessibility,
 ### Scope Rule
 
 All Version 1 conversations begin by selecting one of these five modes before transitioning into a natural conversation with D.AI.SY.
+---
+
+## Decision 006 — Version 1 Agent Architecture
+
+**Status:** ✅ Approved
+
+### Statement
+
+D.AI.SY Version 1 will be implemented as a coordinated system of six specialized agents operating behind a single conversational interface.
+
+### Agents
+
+1. Conversation Agent
+2. Barrier Detection Agent
+3. Cognitive Translation Agent
+4. Planning Agent
+5. Reflection Agent
+6. Growth Passport Agent
+
+### Why
+
+A specialized multi-agent architecture allows D.AI.SY to separate responsibilities while presenting a seamless experience to the user. This aligns with the project's philosophy and supports the implementation approach encouraged by modern agent frameworks.
+
+### Scope Rule
+
+Users interact with one unified D.AI.SY experience. Individual agents remain internal implementation details.
