@@ -98,3 +98,42 @@ Acts as the single entry and exit point for all user interactions.
 - Planning
 - Reflection
 - Long-term memory
+---
+
+## Barrier Detection Agent
+
+### Purpose
+
+Identifies the user's primary cognitive barrier based on the current conversation.
+
+### Responsibilities
+
+1. Analyze the user's message.
+2. Identify the most likely primary barrier.
+3. Assign a confidence level (High / Medium / Low).
+4. Record supporting evidence for the identified barrier.
+5. Update the Agent Context Packet with the barrier analysis.
+
+### Outputs
+
+- Primary Barrier
+- Confidence Level
+- Supporting Evidence
+
+### Owns
+
+- Barrier identification
+- Confidence assessment
+- Evidence collection
+
+### Does Not Own
+
+- Cognitive translation
+- Planning
+- Reflection
+- Growth Passport updates
+- Final response generation
+
+### Design Principle
+
+Identify the single most significant barrier first. Avoid diagnoses, assumptions, or unnecessary complexity.
