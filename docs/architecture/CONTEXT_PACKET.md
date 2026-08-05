@@ -147,3 +147,24 @@ It transforms the user's thoughts into a structured understanding that reduces c
 - Never invent missing information.
 - Unknown information should remain explicitly identified rather than assumed.
 - The simplified problem becomes the primary planning input.
+---
+
+# Planning
+
+The Planning section is owned by the Planning Agent.
+
+It converts structured understanding into one achievable action that helps the user build momentum.
+
+| Field | Type | Required | Owner | Description |
+|------|------|----------|-------|-------------|
+| micro_win | String | Yes | Planning Agent | The smallest meaningful action the user can take next. |
+| next_step | String | Yes | Planning Agent | The immediate recommended action following the Micro-Win. |
+| future_milestones | List<String> | Optional | Planning Agent | A short sequence of future milestones if appropriate. |
+| planning_notes | String | Optional | Planning Agent | Additional reasoning that may help downstream agents but is not shown directly to the user. |
+
+### Engineering Notes
+
+- Generate one Micro-Win first.
+- Avoid overwhelming users with long task lists.
+- Future milestones should remain flexible rather than prescriptive.
+- Planning should support agency by offering guidance, not making decisions for the user.
