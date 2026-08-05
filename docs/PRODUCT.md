@@ -39,3 +39,20 @@ Keeping the initial audience focused allows D.AI.SY to solve one problem excepti
 ### Scope Rule
 
 Version 1 will prioritize cognitive clarity, planning, and agency-building over specialized workflows or industry-specific features.
+---
+
+## Decision 003 — Core Differentiator
+
+**Status:** ✅ Approved
+
+### Statement
+
+D.AI.SY is not an answer engine. It is a cognitive translation system that helps people think more clearly, take meaningful action, and build independence over time.
+
+### Why
+
+Most AI assistants optimize for providing answers. D.AI.SY optimizes for building human agency by reducing cognitive barriers and helping users develop confidence in their own thinking and decision-making.
+
+### Scope Rule
+
+Every feature in Version 1 should reinforce human agency rather than replace human judgment.
