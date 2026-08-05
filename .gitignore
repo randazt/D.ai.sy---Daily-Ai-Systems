@@ -39,3 +39,6 @@ env/
 *.sqlite3
 *.db
 *.swp
+# Environment variables
+.env
+*.env
