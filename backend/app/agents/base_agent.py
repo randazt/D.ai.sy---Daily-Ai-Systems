@@ -2,7 +2,7 @@
 Base interface for all D.AI.SY agents.
 
 Every concrete agent should inherit from BaseAgent and implement
-the required asynchronous interface.
+the common execution interface.
 """
 
 from abc import ABC, abstractmethod
@@ -21,9 +21,9 @@ class BaseAgent(ABC):
         pass
 
     @abstractmethod
-    async def run(self, request: Any) -> Any:
+    def run(self, request: Any) -> Any:
         """
-        Execute the agent.
+        Execute the agent and return its response.
 
         Args:
             request: Structured input for the agent.

@@ -7,7 +7,8 @@ router = APIRouter()
 
 
 @router.post("/chat")
-def chat(request: ChatRequest):
+async def chat(request: ChatRequest):
     print(">>> CHAT ENDPOINT REACHED")
     print(">>> MESSAGE:", request.message)
-    return chat_service.chat(request.message)
+
+    return await chat_service.chat(request.message)
