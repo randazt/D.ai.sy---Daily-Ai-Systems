@@ -431,3 +431,314 @@ Gemini API Competition: Demonstrating strong Gemini integration and agentic arch
 CALL-E Hackathon: Adding a focused phone-assistance capability as a modular extension, without derailing the core product.
 
 We've reached the point where we're building infrastructure rather than prototypes. Every architectural component we complete from here—registry, orchestrator, memory, and specialized agents—will directly strengthen all three competition entries rather than creating parallel work.
+D.AI.SY Development Log
+Session Summary
+
+Phase: Phase 3 – Agent Infrastructure
+
+Status: Major Milestone Completed ✅
+
+Objectives
+
+Continue transforming D.AI.SY from a single-chatbot backend into a scalable multi-agent architecture.
+
+Completed Tasks
+1. Stabilized Backend
+
+Verified that the backend remained fully operational after previous refactoring.
+
+Successfully confirmed:
+
+✅ Root endpoint (/)
+✅ Health endpoint (/health)
+✅ Chat endpoint (/chat)
+✅ Gemini integration
+✅ FastAPI startup
+✅ Swagger UI
+2. Fixed Chat Pipeline
+
+Resolved several issues related to:
+
+asynchronous execution
+module imports
+application startup
+route handling
+service initialization
+
+The final request flow became:
+
+API
+    ↓
+ChatService
+    ↓
+ConversationAgent
+    ↓
+GeminiService
+
+All endpoints returned successful responses.
+
+3. Completed Agent Registry
+
+Finished implementation of:
+
+backend/app/agents/registry.py
+Features
+
+Implemented:
+
+AgentRegistry
+
+Methods:
+
+__init__()
+
+get(name)
+
+list()
+
+The registry now:
+
+stores agent instances
+retrieves agents by name
+lists available agents
+provides a singleton registry instance
+4. Refactored ChatService
+
+Removed the hard-coded dependency on ConversationAgent.
+
+Previous architecture:
+
+ChatService
+    ↓
+ConversationAgent
+
+New architecture:
+
+ChatService
+    ↓
+AgentRegistry
+
+ChatService now retrieves agents dynamically instead of constructing them directly.
+
+5. Introduced Dynamic Agent Routing
+
+Implemented the first version of agent selection.
+
+Current routing:
+
+if message.startswith("/plan"):
+    planner
+else:
+    conversation
+
+This represents D.AI.SY's first working multi-agent routing system.
+
+6. Created PlannerAgent
+
+Added:
+
+backend/app/agents/planner_agent.py
+
+PlannerAgent inherits from:
+
+BaseAgent
+
+Current behavior:
+
+Returns a structured planning response including:
+
+goal
+task breakdown
+resource identification
+recommended next action
+7. Expanded Agent Registry
+
+Registered multiple agents:
+
+ConversationAgent
+
+PlannerAgent
+
+Registry now manages multiple agent instances simultaneously.
+
+8. Verified Multi-Agent Operation
+
+Successfully tested through Swagger.
+
+Conversation Request
+
+Input
+
+{
+  "message": "Hello D.AI.SY"
+}
+
+Returned:
+
+ConversationAgent
+Planning Request
+
+Input
+
+{
+  "message": "/plan Build an AI startup"
+}
+
+Returned:
+
+PlannerAgent
+
+with structured planning output.
+
+9. Fixed Planner Formatting Bug
+
+Resolved string interpolation issue.
+
+Before:
+
+Understand the goal: {message}
+
+After:
+
+Understand the goal: Build an AI startup
+
+Planner now correctly incorporates user input into generated plans.
+
+Architectural Progress
+Previous Architecture
+User
+    ↓
+API
+    ↓
+ChatService
+    ↓
+ConversationAgent
+    ↓
+Gemini
+Current Architecture
+User
+    ↓
+FastAPI
+    ↓
+API Layer
+    ↓
+ChatService
+    ↓
+AgentRegistry
+      │
+      ├───────────────┐
+      ▼               ▼
+ConversationAgent   PlannerAgent
+      │
+      ▼
+ GeminiService
+
+D.AI.SY is now operating as an extensible multi-agent platform rather than a single conversational interface.
+
+Design Decisions
+
+Maintained strict separation of responsibilities.
+
+API Layer
+
+Responsible only for HTTP communication.
+
+ChatService
+
+Responsible for coordinating requests.
+
+AgentRegistry
+
+Responsible for storing and retrieving agent instances.
+
+Agents
+
+Responsible only for performing domain-specific tasks.
+
+This architecture follows the Single Responsibility Principle and establishes a scalable foundation for future agent expansion.
+
+Testing Results
+
+Successfully verified:
+
+✅ FastAPI startup
+✅ Swagger UI
+✅ Root endpoint
+✅ Health endpoint
+✅ Chat endpoint
+✅ ConversationAgent routing
+✅ PlannerAgent routing
+✅ Registry integration
+✅ Async execution
+✅ Gemini communication
+✅ Multi-agent architecture
+
+No regressions introduced during refactoring.
+
+Current Project Status
+Phase 1
+██████████
+100%
+
+Completed
+
+Phase 2
+██████████
+100%
+
+Completed
+
+Phase 3
+████████░░
+~80%
+
+Agent Infrastructure largely complete.
+
+Next Development Phase
+Phase 3.5 – Agent Orchestration
+
+Current routing is embedded inside ChatService.
+
+Example:
+
+if message.startswith("/plan"):
+
+Next objective:
+
+Create a dedicated orchestration layer.
+
+Proposed architecture:
+
+User
+    ↓
+FastAPI
+    ↓
+ChatService
+    ↓
+AgentRouter
+    ↓
+AgentRegistry
+      │
+      ├──────────────┐
+      ▼              ▼
+ConversationAgent  PlannerAgent
+
+The router will become responsible for agent selection while ChatService remains focused on request coordination.
+
+This lays the groundwork for future intelligent orchestration using an LLM instead of hard-coded routing rules.
+
+Milestone Achieved
+
+This session marks D.AI.SY's transition from a single-chatbot backend to the first functional version of a modular multi-agent AI framework.
+
+Core architectural capabilities now include:
+
+Modular agent abstraction
+Centralized agent registration
+Dynamic agent retrieval
+Multi-agent request routing
+Extensible architecture for future specialized agents
+Stable FastAPI service layer
+End-to-end verified execution pipeline
+
+Overall Assessment: This was one of the most significant architectural milestones in the project to date. The backend now has the structural foundation necessary to support intelligent orchestration, additional specialized agents, persistent memory, and autonomous workflows in future phases.
