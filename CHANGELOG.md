@@ -1142,3 +1142,188 @@ Session Outcome
 This session marks a significant transition in the project.
 
 D.A.I.S.Y. evolved from a modular application with AI-assisted components into the foundation of a knowledge-driven, multi-agent platform. The system now has the core services, planning pipeline, and architectural boundaries needed to support intelligent reasoning, future knowledge retrieval, and external action through CALL-E. The strategic roadmap was also simplified and locked around the priorities of All Things Agentic first, CALL-E second, and Gemini XPRIZE as the longer-term commercialization objective, giving the project a clear and disciplined direction going forward.
+CHANGELOG.md
+[0.2.0] – Agent Foundation & Knowledge Integration (In Progress)
+Added
+Agent Architecture
+Implemented modular agent-based architecture.
+Added BaseAgent abstraction.
+Added ConversationAgent.
+Added PlannerAgent.
+Added ExecutionAgent scaffold.
+Added centralized agent registry.
+Refactored chat pipeline to route requests through agents rather than directly through services.
+Knowledge System
+Added KnowledgeService.
+Added document discovery from the knowledge directory.
+Added document loading and preview generation.
+Added basic retrieval engine.
+Planner now retrieves relevant knowledge before generating plans.
+Added knowledge preview to planner responses for verification and debugging.
+Gemini Planning
+Integrated Gemini planning into PlannerAgent.
+Planner dynamically generates task lists using retrieved knowledge.
+Added safe fallback planning when Gemini is unavailable.
+Improved prompt construction with retrieved context.
+Project Planning
+Automatic project creation.
+Automatic task generation.
+UUID-based project identifiers.
+Draft project state support.
+CALL-E Preparation
+Added CALL-E knowledge to the knowledge base.
+Verified CALL-E CLI installation.
+Verified CALL-E authentication.
+Verified MCP connectivity.
+Verified availability of CALL-E MCP tools:
+plan_call
+run_call
+get_call_run
+track_ui_events
+Documentation
+Updated architecture documentation.
+Updated project alignment strategy.
+Added knowledge-aware planning documentation.
+Documented competition alignment.
+Changed
+Chat Pipeline
+
+Previous:
+
+Chat
+    ↓
+Gemini
+
+Current:
+
+Chat
+    ↓
+ConversationAgent
+    ↓
+PlannerAgent
+    ↓
+Knowledge Retrieval
+    ↓
+Gemini
+    ↓
+Project
+Planner
+
+Planner now:
+
+retrieves relevant knowledge
+injects context into Gemini prompts
+produces structured project plans
+supports graceful fallback generation
+Knowledge
+
+Previous:
+
+knowledge/
+    welcome.txt
+
+Current:
+
+knowledge/
+    documents
+        ↓
+Retriever
+        ↓
+Planner
+        ↓
+Gemini
+
+Knowledge now actively influences planning instead of simply existing as static files.
+
+Verified
+
+Successfully verified:
+
+FastAPI startup
+/health
+/chat
+Swagger UI
+Agent pipeline
+Knowledge retrieval
+Gemini integration
+Dynamic project generation
+CALL-E CLI installation
+CALL-E authentication
+CALL-E MCP tool discovery
+Architectural Alignment
+
+D.A.I.S.Y. continues to follow the platform architecture:
+
+Client
+    │
+FastAPI
+    │
+API
+    │
+Services
+    │
+Agents
+    │
+Tools
+    │
+Cloud
+
+Current tool layer includes:
+
+Gemini
+Knowledge Service
+CALL-E (integration pending)
+Future Google Cloud services
+Competition Alignment
+Priority 1 — All Things Agentic (Primary)
+
+Current focus:
+
+Multi-agent architecture
+Knowledge-aware planning
+Modular services
+Production-ready engineering
+Foundation for Google ADK integration
+Foundation for persistent memory
+Foundation for enterprise orchestration
+Priority 2 — CALL-E
+
+Current progress:
+
+CLI installed
+Authentication complete
+MCP tools verified
+Knowledge integration complete
+
+Next milestone:
+
+Runtime CALL-E execution through ExecutionAgent
+Priority 3 — Build with Gemini XPRIZE
+
+Current progress:
+
+AI-native backend
+Modular architecture
+Project planning
+Extensible execution framework
+
+Future work:
+
+Google Cloud deployment
+Real users
+Revenue
+Business operations
+Production evidence
+Next Milestone (v0.3)
+
+Persistent Memory
+
+Planned work:
+
+Firestore integration
+Conversation history
+Project memory
+Execution history
+Agent context persistence
+
+This milestone strengthens all three competition tracks while preserving the long-term vision of D.A.I.S.Y. as a single extensible platform.
