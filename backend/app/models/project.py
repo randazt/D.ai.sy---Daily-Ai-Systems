@@ -12,6 +12,7 @@ class Task:
     title: str
     description: str = ""
     capability: str | None = None
+    inputs: dict[str, object] = field(default_factory=dict)
     status: str = "pending"
     output: str = ""
 

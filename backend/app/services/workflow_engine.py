@@ -1,6 +1,7 @@
 from app.services.capability_registry import CapabilityRegistry
 from app.models.project import Task
 from app.services.adk_task_executor import AdkTaskExecutor
+from app.services.calle_task_executor import CalleTaskExecutor
 from app.services.task_executor import (
     TaskExecutionResult,
     TaskExecutor,
@@ -32,6 +33,11 @@ class WorkflowEngine:
                 "reasoning",
                 executor or AdkTaskExecutor(),
             )
+            if executor is None:
+                capability_registry.register(
+                    "phone_call",
+                    CalleTaskExecutor(),
+                )
 
         self._capability_registry = capability_registry
 

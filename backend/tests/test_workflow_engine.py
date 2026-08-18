@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 from app.models.project import Task
 from app.services.adk_task_executor import AdkTaskExecutor
+from app.services.calle_task_executor import CalleTaskExecutor
 from app.services.capability_registry import CapabilityRegistry
 from app.services.task_executor import TaskExecutionResult, TaskExecutor
 from app.services.workflow_engine import WorkflowEngine
@@ -43,6 +44,7 @@ class WorkflowEngineExecutionTests(unittest.IsolatedAsyncioTestCase):
     def test_task_capability_defaults_to_none(self):
         task = Task(title="Do default work")
         self.assertIsNone(task.capability)
+        self.assertEqual(task.inputs, {})
 
     async def test_successful_execution_marks_task_completed(self):
         task = Task(title="Do successful work")
@@ -148,6 +150,13 @@ class WorkflowEngineExecutionTests(unittest.IsolatedAsyncioTestCase):
         resolved = engine._capability_registry.resolve("reasoning")
 
         self.assertIsInstance(resolved, AdkTaskExecutor)
+
+    def test_default_phone_call_registration_uses_calle_executor(self):
+        engine = WorkflowEngine()
+
+        resolved = engine._capability_registry.resolve("phone_call")
+
+        self.assertIsInstance(resolved, CalleTaskExecutor)
 
     async def test_default_none_capability_uses_reasoning_registration(self):
         task = Task(title="Default reasoning task", capability=None)
