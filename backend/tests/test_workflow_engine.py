@@ -1,6 +1,7 @@
 import unittest
 
 from app.models.project import Task
+from app.services.capability_registry import CapabilityRegistry
 from app.services.task_executor import TaskExecutionResult, TaskExecutor
 from app.services.workflow_engine import WorkflowEngine
 
@@ -71,7 +72,51 @@ class WorkflowEngineExecutionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(task.status, "failed")
         self.assertIn("Executor raised an exception:", task.output)
 
-    async def test_phone_call_capability_uses_existing_executor_for_now(self):
+    async def test_none_capability_executes_reasoning_executor(self):
+        task = Task(title="No capability task", capability=None)
+        executor = RecordingExecutor(
+            TaskExecutionResult(success=True, output="Reasoned"),
+        )
+        engine = WorkflowEngine(executor=executor)
+
+        result = await engine.execute_task(task)
+
+        self.assertTrue(result.success)
+        self.assertEqual(executor.calls, 1)
+        self.assertEqual(task.status, "completed")
+        self.assertEqual(task.output, "Reasoned")
+
+    async def test_reasoning_capability_executes_reasoning_executor(self):
+        task = Task(title="Reasoning task", capability="reasoning")
+        executor = RecordingExecutor(
+            TaskExecutionResult(success=True, output="Reasoned"),
+        )
+        engine = WorkflowEngine(executor=executor)
+
+        result = await engine.execute_task(task)
+
+        self.assertTrue(result.success)
+        self.assertEqual(executor.calls, 1)
+        self.assertEqual(task.status, "completed")
+        self.assertEqual(task.output, "Reasoned")
+
+    async def test_registered_custom_capability_executes_registered_executor(self):
+        task = Task(title="Research task", capability="research")
+        executor = RecordingExecutor(
+            TaskExecutionResult(success=True, output="Researched"),
+        )
+        capability_registry = CapabilityRegistry()
+        capability_registry.register("research", executor)
+        engine = WorkflowEngine(capability_registry=capability_registry)
+
+        result = await engine.execute_task(task)
+
+        self.assertTrue(result.success)
+        self.assertEqual(executor.calls, 1)
+        self.assertEqual(task.status, "completed")
+        self.assertEqual(task.output, "Researched")
+
+    async def test_unsupported_phone_call_capability_fails_without_fallback(self):
         task = Task(
             title="Call target customers",
             capability="phone_call",
@@ -83,10 +128,17 @@ class WorkflowEngineExecutionTests(unittest.IsolatedAsyncioTestCase):
 
         result = await engine.execute_task(task)
 
-        self.assertTrue(result.success)
-        self.assertEqual(executor.calls, 1)
-        self.assertEqual(task.status, "completed")
-        self.assertEqual(task.output, "Call completed")
+        self.assertFalse(result.success)
+        self.assertEqual(
+            result.error,
+            "No executor registered for capability: phone_call",
+        )
+        self.assertEqual(task.status, "failed")
+        self.assertEqual(
+            task.output,
+            "No executor registered for capability: phone_call",
+        )
+        self.assertEqual(executor.calls, 0)
 
 
 class StartupImportTests(unittest.TestCase):
