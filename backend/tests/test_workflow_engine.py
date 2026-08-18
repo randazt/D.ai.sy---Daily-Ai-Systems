@@ -1,6 +1,8 @@
 import unittest
+from unittest.mock import AsyncMock, patch
 
 from app.models.project import Task
+from app.services.adk_task_executor import AdkTaskExecutor
 from app.services.capability_registry import CapabilityRegistry
 from app.services.task_executor import TaskExecutionResult, TaskExecutor
 from app.services.workflow_engine import WorkflowEngine
@@ -139,6 +141,69 @@ class WorkflowEngineExecutionTests(unittest.IsolatedAsyncioTestCase):
             "No executor registered for capability: phone_call",
         )
         self.assertEqual(executor.calls, 0)
+
+    def test_default_reasoning_registration_uses_adk_executor(self):
+        engine = WorkflowEngine()
+
+        resolved = engine._capability_registry.resolve("reasoning")
+
+        self.assertIsInstance(resolved, AdkTaskExecutor)
+
+    async def test_default_none_capability_uses_reasoning_registration(self):
+        task = Task(title="Default reasoning task", capability=None)
+        engine = WorkflowEngine()
+        execute_mock = AsyncMock(
+            return_value=TaskExecutionResult(
+                success=True,
+                output="ADK default execution",
+            )
+        )
+
+        with patch.object(
+            AdkTaskExecutor,
+            "execute",
+            new=execute_mock,
+        ):
+            result = await engine.execute_task(task)
+
+        execute_mock.assert_awaited_once()
+        self.assertTrue(result.success)
+        self.assertEqual(task.status, "completed")
+        self.assertEqual(task.output, "ADK default execution")
+
+    async def test_unsupported_research_capability_fails_by_default(self):
+        task = Task(title="Research market", capability="research")
+        engine = WorkflowEngine()
+
+        result = await engine.execute_task(task)
+
+        self.assertFalse(result.success)
+        self.assertEqual(
+            result.error,
+            "No executor registered for capability: research",
+        )
+        self.assertEqual(task.status, "failed")
+        self.assertEqual(
+            task.output,
+            "No executor registered for capability: research",
+        )
+
+    async def test_unsupported_document_generation_capability_fails_by_default(self):
+        task = Task(title="Draft report", capability="document_generation")
+        engine = WorkflowEngine()
+
+        result = await engine.execute_task(task)
+
+        self.assertFalse(result.success)
+        self.assertEqual(
+            result.error,
+            "No executor registered for capability: document_generation",
+        )
+        self.assertEqual(task.status, "failed")
+        self.assertEqual(
+            task.output,
+            "No executor registered for capability: document_generation",
+        )
 
 
 class StartupImportTests(unittest.TestCase):

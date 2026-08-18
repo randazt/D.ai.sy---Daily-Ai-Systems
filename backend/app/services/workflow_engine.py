@@ -1,7 +1,7 @@
 from app.services.capability_registry import CapabilityRegistry
 from app.models.project import Task
+from app.services.adk_task_executor import AdkTaskExecutor
 from app.services.task_executor import (
-    GeminiTaskExecutor,
     TaskExecutionResult,
     TaskExecutor,
 )
@@ -30,7 +30,7 @@ class WorkflowEngine:
             capability_registry = CapabilityRegistry()
             capability_registry.register(
                 "reasoning",
-                executor or GeminiTaskExecutor(),
+                executor or AdkTaskExecutor(),
             )
 
         self._capability_registry = capability_registry
