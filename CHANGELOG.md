@@ -1639,3 +1639,204 @@ The project's long-term direction has also been formally reaffirmed:
 3. Gemini XPRIZE
 
 Every future milestone should strengthen this single shared architecture rather than creating separate products.
+
+---
+
+## D.A.I.S.Y. Development Log — August 18, 2026
+
+### D.A.I.S.Y. development completed
+
+Tonight's milestones advanced D.A.I.S.Y. from planning-only behavior toward an executable, capability-driven agentic system while preserving one platform architecture.
+
+### Planning and orchestration foundation
+
+Execution path established around:
+
+User request  
+→ ChatService  
+→ AgentRouter  
+→ AgentRegistry  
+→ PlannerAgent / ExecutionAgent  
+→ ProjectService  
+→ WorkflowEngine  
+→ capability-specific executor
+
+Planning/project/task foundations were expanded and wired into explicit execution lifecycle behavior.
+
+### Task execution pipeline
+
+WorkflowEngine no longer depends on a `NotImplementedError` execution stub.
+
+Task execution now follows an explicit lifecycle:
+
+`pending` → `running` → `completed | failed`
+
+`completed` requires executor success. Failure paths are represented explicitly rather than silently becoming successful task states.
+
+### Semantic task capabilities
+
+Provider-neutral task capability metadata is now part of task planning/execution:
+
+- `reasoning`
+- `research`
+- `phone_call`
+- `document_generation`
+
+Planner semantics now describe **what capability is needed**, not provider implementation details.
+
+### CapabilityRegistry
+
+Capability-based executor resolution is now an architectural rule.
+
+Agents coordinate work.  
+Tools/executors perform work.
+
+Unsupported capabilities fail explicitly instead of silently falling through to another executor.
+
+### Google ADK reasoning execution
+
+Reasoning tasks now resolve through `AdkTaskExecutor`, establishing Google ADK within D.A.I.S.Y.'s execution architecture.
+
+This is an architectural milestone, not by itself proof of full competition compliance.
+
+### CALL-E execution capability
+
+`phone_call` now resolves through `CalleTaskExecutor`.
+
+Safety boundary:
+
+- Real calls are disabled by default.
+- Live execution requires explicit `DAISY_ENABLE_REAL_CALLS == "1"`.
+- Development/testing paths use guarded or fake execution.
+- No real phone call was made during tonight's work.
+
+CALL-E remains an execution capability inside D.A.I.S.Y., not a separate product.
+
+### Provider-neutral Task.inputs
+
+`Task` now supports:
+
+`inputs: dict[str, object]`
+
+For `phone_call`, semantic v1 input contract supports:
+
+- `destination`
+- `objective`
+- `questions`
+- `language`
+- `region`
+
+Planner-generated inputs prohibit provider-specific execution details such as:
+
+- `plan_id`
+- `confirm_token`
+- `to_phones`
+- CALL-E CLI/SDK configuration
+- provider identifiers
+
+### Destination authority invariant
+
+For `phone_call` tasks:
+
+- Destination authority comes from the **user request**.
+- A model-generated phone number cannot become an executable destination.
+- If user and model destinations conflict, user destination wins.
+- If user provides no destination, PlannerAgent must not fabricate one.
+- Phone numbers appearing only in model-generated title/description/questions do not authorize execution.
+
+Dedicated tests were added for these authority boundaries.
+
+### Structured planning
+
+PlannerAgent now supports structured semantic task planning rather than relying only on title-keyword classification.
+
+Conceptual task contract:
+
+```json
+{
+  "title": "...",
+  "description": "...",
+  "capability": "reasoning|research|phone_call|document_generation",
+  "inputs": {}
+}
+```
+
+Structured output is validated/sanitized before `Task` creation. Malformed structured output uses controlled fallback behavior (existing fallback planner/classifier path) without crashing or fabricating execution parameters.
+
+### Cloud/deployment packaging
+
+Reproducible backend packaging work completed:
+
+- Python 3.12 container runtime
+- Cloud Run-compatible `PORT` handling
+- `0.0.0.0` binding for container runtime
+- backend dependency manifest updates
+- `.dockerignore` updates
+- environment-variable documentation updates
+- no embedded credentials in committed artifacts
+
+This records packaging/reproducibility work; it does not claim completed production deployment.
+
+### Verification state
+
+Latest verified backend state:
+
+- 69 backend tests passing
+- FastAPI app import succeeds (`from app.main import app`)
+- planner destination-authority tests pass
+- CALL-E executor tests pass
+- WorkflowEngine tests pass
+- ADK executor tests pass
+- no real phone call occurred
+
+### Important commits/checkpoints
+
+- `3db2959` — feat: add task execution pipeline
+- `c1dbde1` — feat: add agent planning and orchestration foundation
+- `2c44f85` — feat: add task capability metadata
+- `9add8e4` — feat: add capability-based executor routing
+- `0a05b16` — feat: add reproducible Cloud Run packaging
+- `816ac10` — feat: add Google ADK reasoning executor
+- `eba744b` — feat: add guarded CALL-E phone execution
+- `f86a9c4` — feat: add planner semantic execution inputs
+
+### Competition alignment decision
+
+Active priority remains:
+
+1. All Things Agentic (primary target)
+2. CALL-E (secondary target)
+3. Build with Gemini XPRIZE as an autonomous-business/product benchmark (deadline passed unless prior submission exists)
+
+D.A.I.S.Y. remains one extensible platform.
+
+Product identity:
+
+Confusion → Clarity → Action → Confidence → Agency
+
+Architectural principle:
+
+Agents coordinate work.  
+Tools perform work.
+
+Safety principle:
+
+Autonomous does not mean unauthorized.
+
+### Competition gaps still open
+
+Completed engineering is separated from remaining competition work. Open priorities:
+
+- verify full Planner → WorkflowEngine → CapabilityRegistry → Executor runtime chain
+- establish an outcome/observation contract
+- add bounded continuation/replanning
+- verify required Gemini model/runtime against current All Things Agentic rules
+- verify qualifying Google agent framework requirements
+- deploy and verify Google Cloud infrastructure
+- collect production/autonomous execution evidence
+- perform an explicitly authorized controlled CALL-E runtime test
+- complete any required CALL-E public-repository contribution/PR
+- finalize architecture diagram
+- finalize reproducible setup/spin-up documentation
+- assemble competition demo/submission evidence
+- preserve provenance separating pre-existing D.A.I.S.Y. work from competition-period development
