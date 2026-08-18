@@ -56,6 +56,7 @@ class ExecutionAgent(BaseAgent):
             "current_task": {
                 "title": current_task.title,
                 "description": current_task.description,
+                "capability": current_task.capability,
                 "status": current_task.status,
                 "output": current_task.output,
             },

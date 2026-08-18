@@ -11,6 +11,7 @@ class Task:
 
     title: str
     description: str = ""
+    capability: str | None = None
     status: str = "pending"
     output: str = ""
 

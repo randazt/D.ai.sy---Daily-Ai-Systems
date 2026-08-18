@@ -1,9 +1,74 @@
+import re
+
 from app.agents.base_agent import BaseAgent
 from app.models.project import Task
 from app.knowledge.knowledge_service import knowledge_service
 from app.knowledge.retriever import knowledge_retriever
 from app.services.gemini_service import gemini_service
 from app.services.project_service import project_service
+
+
+PHONE_CALL_KEYWORDS = (
+    "call",
+    "call customers",
+    "call customer",
+    "phone call",
+    "phone calls",
+    "telephone call",
+    "telephone calls",
+    "calling customers",
+    "calling customer",
+    "calling",
+    "dial",
+    "interview by phone",
+    "phone interview",
+    "phone interviews",
+)
+
+DOCUMENT_GENERATION_KEYWORDS = (
+    "report",
+    "reports",
+    "document",
+    "documents",
+    "summary",
+    "summaries",
+    "deliverable",
+    "deliverables",
+    "writeup",
+)
+
+RESEARCH_KEYWORDS = (
+    "research",
+    "investigate",
+    "investigation",
+    "gather",
+    "collect",
+    "market analysis",
+    "market research",
+    "discovery",
+)
+
+
+def classify_task_capability(task_text: str) -> str:
+    normalized_text = " ".join(
+        re.sub(r"[^a-z0-9]+", " ", task_text.lower()).split()
+    )
+
+    padded_text = f" {normalized_text} "
+
+    if any(f" {keyword} " in padded_text for keyword in PHONE_CALL_KEYWORDS):
+        return "phone_call"
+
+    if any(
+        f" {keyword} " in padded_text
+        for keyword in DOCUMENT_GENERATION_KEYWORDS
+    ):
+        return "document_generation"
+
+    if any(f" {keyword} " in padded_text for keyword in RESEARCH_KEYWORDS):
+        return "research"
+
+    return "reasoning"
 
 
 class PlannerAgent(BaseAgent):
@@ -114,7 +179,10 @@ Requirements:
         # ----------------------------------------
 
         tasks = [
-            Task(title=item)
+            Task(
+                title=item,
+                capability=classify_task_capability(item),
+            )
             for item in ai_plan
         ]
 
@@ -155,6 +223,7 @@ Requirements:
                     {
                         "title": task.title,
                         "description": task.description,
+                        "capability": task.capability,
                         "status": task.status,
                     }
                     for task in project.tasks

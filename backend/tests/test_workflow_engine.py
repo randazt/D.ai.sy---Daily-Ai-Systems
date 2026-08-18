@@ -26,7 +26,21 @@ class ExceptionExecutor(TaskExecutor):
         raise RuntimeError("executor exploded")
 
 
+class RecordingExecutor(TaskExecutor):
+    def __init__(self, result: TaskExecutionResult):
+        self.result = result
+        self.calls = 0
+
+    async def execute(self, task: Task) -> TaskExecutionResult:
+        self.calls += 1
+        return self.result
+
+
 class WorkflowEngineExecutionTests(unittest.IsolatedAsyncioTestCase):
+    def test_task_capability_defaults_to_none(self):
+        task = Task(title="Do default work")
+        self.assertIsNone(task.capability)
+
     async def test_successful_execution_marks_task_completed(self):
         task = Task(title="Do successful work")
         engine = WorkflowEngine(executor=SuccessfulExecutor())
@@ -56,6 +70,23 @@ class WorkflowEngineExecutionTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(result.success)
         self.assertEqual(task.status, "failed")
         self.assertIn("Executor raised an exception:", task.output)
+
+    async def test_phone_call_capability_uses_existing_executor_for_now(self):
+        task = Task(
+            title="Call target customers",
+            capability="phone_call",
+        )
+        executor = RecordingExecutor(
+            TaskExecutionResult(success=True, output="Call completed"),
+        )
+        engine = WorkflowEngine(executor=executor)
+
+        result = await engine.execute_task(task)
+
+        self.assertTrue(result.success)
+        self.assertEqual(executor.calls, 1)
+        self.assertEqual(task.status, "completed")
+        self.assertEqual(task.output, "Call completed")
 
 
 class StartupImportTests(unittest.TestCase):
