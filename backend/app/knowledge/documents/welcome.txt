@@ -1,0 +1,11 @@
+Welcome to the D.AI.S.Y. Knowledge Base.
+
+This folder contains curated documents that D.AI.S.Y. agents can use to make better decisions.
+
+Knowledge should be factual, organized, and reusable.
+
+CALL-E Integration
+
+D.A.I.S.Y. supports integration with the CALL-E SDK to allow autonomous AI agents to place phone calls, gather structured information, and execute real-world workflows.
+
+This capability is a primary objective for the CALL-E hackathon.
