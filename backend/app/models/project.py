@@ -15,6 +15,7 @@ class Task:
     inputs: dict[str, object] = field(default_factory=dict)
     status: str = "pending"
     output: str = ""
+    retry_count: int = 0
 
 
 @dataclass
