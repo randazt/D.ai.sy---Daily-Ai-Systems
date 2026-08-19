@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from app.agents.execution_agent import ExecutionAgent
 from app.agents.planner_agent import PlannerAgent, classify_task_capability
-from app.models.project import Task
+from app.models.project import Task, TaskObservation
 from app.services.project_service import project_service
 from app.services.task_executor import TaskExecutionResult
 
@@ -118,6 +118,14 @@ class PlannerAndExecutionCapabilityTests(unittest.IsolatedAsyncioTestCase):
             return TaskExecutionResult(
                 success=True,
                 output="Executed capability task",
+                observation=TaskObservation(
+                    task_title=task.title,
+                    capability="phone_call",
+                    status="completed",
+                    success=True,
+                    outcome="completed",
+                    summary="Executed capability task",
+                ),
             )
 
         with patch(
@@ -130,6 +138,9 @@ class PlannerAndExecutionCapabilityTests(unittest.IsolatedAsyncioTestCase):
             result["current_task"]["capability"],
             "phone_call",
         )
+        self.assertEqual(result["execution"]["success"], True)
+        self.assertEqual(result["observation"]["capability"], "phone_call")
+        self.assertEqual(result["observation"]["outcome"], "completed")
 
 
 class PlannerSemanticInputsTests(unittest.IsolatedAsyncioTestCase):

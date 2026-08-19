@@ -1,3 +1,5 @@
+from dataclasses import asdict
+
 from app.agents.base_agent import BaseAgent
 from app.services.project_service import project_service
 from app.services.workflow_engine import workflow_engine
@@ -11,15 +13,6 @@ class ExecutionAgent(BaseAgent):
     async def run(self, message: str):
 
         project = project_service.get_latest_project()
-
-        # Temporary diagnostic:
-        # Verify which project and tasks the ExecutionAgent receives.
-        print(
-            "EXECUTION DEBUG:",
-            project,
-            "TASKS:",
-            project.tasks if project else None,
-        )
 
         if project is None:
             return {
@@ -65,6 +58,11 @@ class ExecutionAgent(BaseAgent):
                 "output": execution_result.output,
                 "error": execution_result.error,
             },
+            "observation": (
+                asdict(execution_result.observation)
+                if execution_result.observation is not None
+                else None
+            ),
         }
 
     @property

@@ -18,6 +18,17 @@ class Task:
 
 
 @dataclass
+class TaskObservation:
+    task_title: str
+    capability: str
+    status: str
+    success: bool
+    outcome: str
+    summary: str
+    error: str = ""
+
+
+@dataclass
 class Project:
     """
     Represents a user project managed by D.AI.SY.

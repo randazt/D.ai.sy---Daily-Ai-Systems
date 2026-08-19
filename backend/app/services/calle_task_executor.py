@@ -246,7 +246,11 @@ class CalleTaskExecutor(TaskExecutor):
                 region=region,
             )
         except CalleSafetyError as e:
-            return TaskExecutionResult(success=False, error=str(e))
+            return TaskExecutionResult(
+                success=False,
+                error=str(e),
+                outcome="authority_required",
+            )
         except CalleTransportError as e:
             return TaskExecutionResult(
                 success=False,
@@ -293,7 +297,11 @@ class CalleTaskExecutor(TaskExecutor):
                 confirm_token=confirm_token,
             )
         except CalleSafetyError as e:
-            return TaskExecutionResult(success=False, error=str(e))
+            return TaskExecutionResult(
+                success=False,
+                error=str(e),
+                outcome="authority_required",
+            )
         except CalleTransportError as e:
             return TaskExecutionResult(
                 success=False,
@@ -319,7 +327,11 @@ class CalleTaskExecutor(TaskExecutor):
         except TimeoutError as e:
             return TaskExecutionResult(success=False, error=str(e))
         except CalleSafetyError as e:
-            return TaskExecutionResult(success=False, error=str(e))
+            return TaskExecutionResult(
+                success=False,
+                error=str(e),
+                outcome="authority_required",
+            )
         except CalleTransportError as e:
             return TaskExecutionResult(
                 success=False,

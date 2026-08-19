@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from app.models.project import Task
+from app.models.project import Task, TaskObservation
 
 
 @dataclass
@@ -9,6 +9,8 @@ class TaskExecutionResult:
     success: bool
     output: str = ""
     error: str = ""
+    outcome: str = ""
+    observation: TaskObservation | None = None
 
 
 class TaskExecutor(ABC):

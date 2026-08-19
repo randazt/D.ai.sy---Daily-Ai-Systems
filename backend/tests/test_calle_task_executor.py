@@ -466,3 +466,34 @@ class CalleTaskExecutorTests(unittest.IsolatedAsyncioTestCase):
                     destination="+15551230013",
                     objective="Confirm appointment",
                 )
+
+    async def test_safety_block_maps_to_authority_required_outcome(self):
+        class SafetyBlockedTransport(CalleTransport):
+            async def plan_call(
+                self,
+                *,
+                destination: str,
+                objective: str,
+                language: str | None = None,
+                region: str | None = None,
+            ) -> dict:
+                raise CalleSafetyError("Real CALL-E execution is disabled.")
+
+            async def run_call(self, *, plan_id: str, confirm_token: str) -> dict:
+                raise AssertionError("run_call should not be reached")
+
+            async def get_call_run(self, *, run_id: str) -> dict:
+                raise AssertionError("get_call_run should not be reached")
+
+        executor = self._executor(transport=SafetyBlockedTransport())
+        task = Task(
+            title="Call customer",
+            capability="phone_call",
+            inputs={"destination": "+15551230015"},
+        )
+
+        result = await executor.execute(task)
+
+        self.assertFalse(result.success)
+        self.assertEqual(result.outcome, "authority_required")
+        self.assertIn("disabled", result.error)
