@@ -105,12 +105,24 @@ class ExecutionResultSchema(BaseModel):
     error: str
 
 
+class TaskDecisionSchema(BaseModel):
+    decision: Literal[
+        "continue",
+        "retry",
+        "replan",
+        "request_authority",
+        "stop",
+    ]
+    reason: str
+
+
 class ExecutionResponse(BaseModel):
     agent: Literal["execution"]
     status: str
     project: ExecutionProjectSchema
     current_task: ExecutionCurrentTaskSchema
     execution: ExecutionResultSchema
+    decision: Optional[TaskDecisionSchema] = None
     observation: Optional[TaskObservationSchema] = None
 
 

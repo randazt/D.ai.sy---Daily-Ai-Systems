@@ -15,6 +15,13 @@ SUPPORTED_OUTCOMES = {
     "unsupported",
     "authority_required",
 }
+SUPPORTED_DECISIONS = {
+    "continue",
+    "retry",
+    "replan",
+    "request_authority",
+    "stop",
+}
 
 
 def _referenced_schema_names(value):
@@ -129,6 +136,31 @@ class OpenAPIDocumentationTests(unittest.TestCase):
             self.assertEqual(documented_values, SUPPORTED_OUTCOMES)
         else:
             self.assertEqual(outcome.get("type"), "string")
+
+    def test_task_decision_schema_exposes_public_fields(self):
+        properties = self.schemas["TaskDecisionSchema"]["properties"]
+        expected = {
+            "decision",
+            "reason",
+        }
+
+        self.assertEqual(set(properties), expected)
+
+    def test_task_decision_schema_uses_exact_decision_enum(self):
+        decision = self.schemas["TaskDecisionSchema"]["properties"]["decision"]
+        documented_values = _enum_values(decision)
+
+        self.assertEqual(documented_values, SUPPORTED_DECISIONS)
+
+    def test_execution_response_exposes_optional_decision(self):
+        properties = self.schemas["ExecutionResponse"]["properties"]
+        decision = properties["decision"]
+
+        self.assertIn("decision", properties)
+        self.assertEqual(
+            decision["anyOf"][0]["$ref"],
+            "#/components/schemas/TaskDecisionSchema",
+        )
 
     def test_task_inputs_are_provider_neutral_objects(self):
         for schema_name in ("PlannerTaskSchema", "ExecutionCurrentTaskSchema"):

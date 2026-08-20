@@ -36,7 +36,11 @@ class ExecutionAgent(BaseAgent):
                 "message": "All tasks are complete."
             }
 
-        execution_result = await workflow_engine.execute_task(current_task)
+        workflow_result = await workflow_engine.execute_task_with_decision(
+            project=project,
+            task=current_task,
+        )
+        execution_result = workflow_result.execution_result
 
         return {
             "agent": "execution",
@@ -58,6 +62,7 @@ class ExecutionAgent(BaseAgent):
                 "output": execution_result.output,
                 "error": execution_result.error,
             },
+            "decision": asdict(workflow_result.decision),
             "observation": (
                 asdict(execution_result.observation)
                 if execution_result.observation is not None

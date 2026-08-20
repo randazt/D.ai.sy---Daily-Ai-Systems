@@ -1,11 +1,25 @@
+from dataclasses import dataclass
+
 from app.services.capability_registry import CapabilityRegistry
-from app.models.project import Task, TaskObservation
+from app.models.project import Project, Task, TaskObservation
 from app.services.adk_task_executor import AdkTaskExecutor
 from app.services.calle_task_executor import CalleTaskExecutor
+from app.services.decision_policy import (
+    DecisionContext,
+    DecisionPolicy,
+    TaskDecision,
+    TaskSummary,
+)
 from app.services.task_executor import (
     TaskExecutionResult,
     TaskExecutor,
 )
+
+
+@dataclass
+class WorkflowTaskDecisionResult:
+    execution_result: TaskExecutionResult
+    decision: TaskDecision
 
 
 class WorkflowEngine:
@@ -21,6 +35,7 @@ class WorkflowEngine:
         self,
         executor: TaskExecutor | None = None,
         capability_registry: CapabilityRegistry | None = None,
+        decision_policy: DecisionPolicy | None = None,
     ):
         if executor is not None and capability_registry is not None:
             raise ValueError(
@@ -40,6 +55,7 @@ class WorkflowEngine:
                 )
 
         self._capability_registry = capability_registry
+        self._decision_policy = decision_policy or DecisionPolicy()
 
     async def execute_task(self, task: Task):
         """
@@ -97,6 +113,57 @@ class WorkflowEngine:
             result=result,
         )
 
+    async def execute_task_with_decision(
+        self,
+        *,
+        project: Project,
+        task: Task,
+    ) -> WorkflowTaskDecisionResult:
+        """
+        Execute one task, evaluate the next decision, and stop.
+        """
+        self._find_task_index(project=project, current_task=task)
+        execution_result = await self.execute_task(task)
+
+        if execution_result.observation is None:
+            raise ValueError("Task execution did not produce an observation.")
+
+        decision = self.evaluate_decision(
+            project=project,
+            current_task=task,
+            observation=execution_result.observation,
+        )
+
+        return WorkflowTaskDecisionResult(
+            execution_result=execution_result,
+            decision=decision,
+        )
+
+    def evaluate_decision(
+        self,
+        *,
+        project: Project,
+        current_task: Task,
+        observation: TaskObservation,
+    ) -> TaskDecision:
+        current_task_index = self._find_task_index(
+            project=project,
+            current_task=current_task,
+        )
+        context = DecisionContext(
+            project_goal=project.title,
+            current_task=self._build_task_summary(current_task),
+            observation=observation,
+            remaining_tasks=[
+                self._build_task_summary(task)
+                for task in project.tasks[current_task_index + 1:]
+                if task.status == "pending"
+            ],
+            retry_count=current_task.retry_count,
+        )
+
+        return self._decision_policy.decide(context)
+
     @staticmethod
     def _normalize_capability(capability: str | None) -> str:
         if capability is None:
@@ -107,6 +174,38 @@ class WorkflowEngine:
             return "reasoning"
 
         return normalized
+
+    @staticmethod
+    def _build_task_summary(task: Task) -> TaskSummary:
+        return TaskSummary(
+            title=task.title,
+            capability=task.capability,
+            status=task.status,
+        )
+
+    @staticmethod
+    def _find_task_index(*, project: Project, current_task: Task) -> int:
+        identity_matches = [
+            index
+            for index, task in enumerate(project.tasks)
+            if task is current_task
+        ]
+        if len(identity_matches) == 1:
+            return identity_matches[0]
+        if len(identity_matches) > 1:
+            raise ValueError("Current task appears multiple times in project.")
+
+        value_matches = [
+            index
+            for index, task in enumerate(project.tasks)
+            if task == current_task
+        ]
+        if len(value_matches) == 1:
+            return value_matches[0]
+        if not value_matches:
+            raise ValueError("Current task does not belong to project.")
+
+        raise ValueError("Current task position is ambiguous in project.")
 
     @classmethod
     def _attach_observation(
