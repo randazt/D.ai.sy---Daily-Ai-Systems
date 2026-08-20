@@ -22,6 +22,15 @@ class WorkflowTaskDecisionResult:
     decision: TaskDecision
 
 
+@dataclass
+class WorkflowContinueApplicationResult:
+    original: WorkflowTaskDecisionResult
+    continued_task: Task | None = None
+    continued: WorkflowTaskDecisionResult | None = None
+    continue_applied: bool = False
+    continue_skipped_reason: str = ""
+
+
 class WorkflowEngine:
     """
     Coordinates execution of project tasks.
@@ -139,6 +148,61 @@ class WorkflowEngine:
             decision=decision,
         )
 
+    async def execute_task_with_one_continue(
+        self,
+        *,
+        project: Project,
+        task: Task,
+    ) -> WorkflowContinueApplicationResult:
+        """
+        Execute one task, apply one reasoning-only continue, and stop.
+        """
+        original = await self.execute_task_with_decision(
+            project=project,
+            task=task,
+        )
+
+        if original.decision.decision != "continue":
+            return WorkflowContinueApplicationResult(
+                original=original,
+                continue_skipped_reason="Original decision was not continue.",
+            )
+
+        current_task_index = self._find_task_index(
+            project=project,
+            current_task=task,
+        )
+        next_task = self._find_next_pending_task(
+            project=project,
+            after_index=current_task_index,
+        )
+        if next_task is None:
+            return WorkflowContinueApplicationResult(
+                original=original,
+                continue_skipped_reason="No subsequent pending task is available.",
+            )
+
+        next_capability = self._normalize_capability(next_task.capability)
+        if next_capability != "reasoning":
+            return WorkflowContinueApplicationResult(
+                original=original,
+                continued_task=next_task,
+                continue_skipped_reason=(
+                    "Automatic continuation is limited to reasoning tasks."
+                ),
+            )
+
+        continued = await self.execute_task_with_decision(
+            project=project,
+            task=next_task,
+        )
+        return WorkflowContinueApplicationResult(
+            original=original,
+            continued_task=next_task,
+            continued=continued,
+            continue_applied=True,
+        )
+
     def evaluate_decision(
         self,
         *,
@@ -206,6 +270,18 @@ class WorkflowEngine:
             raise ValueError("Current task does not belong to project.")
 
         raise ValueError("Current task position is ambiguous in project.")
+
+    @staticmethod
+    def _find_next_pending_task(
+        *,
+        project: Project,
+        after_index: int,
+    ) -> Task | None:
+        for task in project.tasks[after_index + 1:]:
+            if task.status == "pending":
+                return task
+
+        return None
 
     @classmethod
     def _attach_observation(

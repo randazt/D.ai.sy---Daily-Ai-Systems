@@ -8,7 +8,10 @@ from app.models.project import Task, TaskObservation
 from app.services.decision_policy import TaskDecision
 from app.services.project_service import project_service
 from app.services.task_executor import TaskExecutionResult
-from app.services.workflow_engine import WorkflowTaskDecisionResult
+from app.services.workflow_engine import (
+    WorkflowContinueApplicationResult,
+    WorkflowTaskDecisionResult,
+)
 
 
 class TaskCapabilityClassifierTests(unittest.TestCase):
@@ -117,7 +120,7 @@ class PlannerAndExecutionCapabilityTests(unittest.IsolatedAsyncioTestCase):
         async def fake_execute(*, project, task):
             task.status = "completed"
             task.output = "Executed capability task"
-            return WorkflowTaskDecisionResult(
+            original = WorkflowTaskDecisionResult(
                 execution_result=TaskExecutionResult(
                     success=True,
                     output="Executed capability task",
@@ -135,9 +138,13 @@ class PlannerAndExecutionCapabilityTests(unittest.IsolatedAsyncioTestCase):
                     reason="No remaining work.",
                 ),
             )
+            return WorkflowContinueApplicationResult(
+                original=original,
+                continue_skipped_reason="Original decision was not continue.",
+            )
 
         with patch(
-            "app.agents.execution_agent.workflow_engine.execute_task_with_decision",
+            "app.agents.execution_agent.workflow_engine.execute_task_with_one_continue",
             new=AsyncMock(side_effect=fake_execute),
         ):
             result = await ExecutionAgent().run("Execute the current project.")
@@ -150,8 +157,9 @@ class PlannerAndExecutionCapabilityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["observation"]["capability"], "phone_call")
         self.assertEqual(result["observation"]["outcome"], "completed")
         self.assertEqual(result["decision"]["decision"], "stop")
+        self.assertFalse(result["continuation"]["continue_applied"])
 
-    async def test_execution_response_exposes_continue_without_executing_next_task(self):
+    async def test_execution_response_exposes_applied_continuation(self):
         project_id = project_service.create_project("Plan outreach")
         project = project_service.get_project(project_id)
         first_task = Task(title="Summarize target segment")
@@ -161,7 +169,9 @@ class PlannerAndExecutionCapabilityTests(unittest.IsolatedAsyncioTestCase):
         async def fake_execute(*, project, task):
             task.status = "completed"
             task.output = "First task complete"
-            return WorkflowTaskDecisionResult(
+            second_task.status = "completed"
+            second_task.output = "Second task complete"
+            original = WorkflowTaskDecisionResult(
                 execution_result=TaskExecutionResult(
                     success=True,
                     output="First task complete",
@@ -179,18 +189,59 @@ class PlannerAndExecutionCapabilityTests(unittest.IsolatedAsyncioTestCase):
                     reason="Task completed and remaining work is available.",
                 ),
             )
+            continued = WorkflowTaskDecisionResult(
+                execution_result=TaskExecutionResult(
+                    success=True,
+                    output="Second task complete",
+                    observation=TaskObservation(
+                        task_title=second_task.title,
+                        capability="reasoning",
+                        status="completed",
+                        success=True,
+                        outcome="completed",
+                        summary="Second task complete",
+                    ),
+                ),
+                decision=TaskDecision(
+                    decision="stop",
+                    reason="No remaining work.",
+                ),
+            )
+            return WorkflowContinueApplicationResult(
+                original=original,
+                continued_task=second_task,
+                continued=continued,
+                continue_applied=True,
+            )
 
         execute_mock = AsyncMock(side_effect=fake_execute)
         with patch(
-            "app.agents.execution_agent.workflow_engine.execute_task_with_decision",
+            "app.agents.execution_agent.workflow_engine.execute_task_with_one_continue",
             new=execute_mock,
         ):
             result = await ExecutionAgent().run("Execute the current project.")
 
         execute_mock.assert_awaited_once()
         self.assertEqual(result["decision"]["decision"], "continue")
+        self.assertTrue(result["continuation"]["continue_applied"])
+        self.assertEqual(
+            result["continuation"]["continued_task"]["title"],
+            "Draft next message",
+        )
+        self.assertEqual(
+            result["continuation"]["continued_execution"]["output"],
+            "Second task complete",
+        )
+        self.assertEqual(
+            result["continuation"]["continued_observation"]["outcome"],
+            "completed",
+        )
+        self.assertEqual(
+            result["continuation"]["continued_decision"]["decision"],
+            "stop",
+        )
         self.assertEqual(first_task.status, "completed")
-        self.assertEqual(second_task.status, "pending")
+        self.assertEqual(second_task.status, "completed")
 
 
 class PlannerSemanticInputsTests(unittest.IsolatedAsyncioTestCase):

@@ -116,6 +116,15 @@ class TaskDecisionSchema(BaseModel):
     reason: str
 
 
+class ExecutionContinuationSchema(BaseModel):
+    continue_applied: bool
+    continue_skipped_reason: str
+    continued_task: Optional[ExecutionCurrentTaskSchema] = None
+    continued_execution: Optional[ExecutionResultSchema] = None
+    continued_observation: Optional[TaskObservationSchema] = None
+    continued_decision: Optional[TaskDecisionSchema] = None
+
+
 class ExecutionResponse(BaseModel):
     agent: Literal["execution"]
     status: str
@@ -124,6 +133,7 @@ class ExecutionResponse(BaseModel):
     execution: ExecutionResultSchema
     decision: Optional[TaskDecisionSchema] = None
     observation: Optional[TaskObservationSchema] = None
+    continuation: Optional[ExecutionContinuationSchema] = None
 
 
 class ConversationResponse(BaseModel):

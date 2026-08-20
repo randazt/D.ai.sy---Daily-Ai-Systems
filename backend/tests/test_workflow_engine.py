@@ -7,7 +7,11 @@ from app.services.adk_task_executor import AdkTaskExecutor
 from app.services.calle_task_executor import CalleTaskExecutor
 from app.services.capability_registry import CapabilityRegistry
 from app.services.task_executor import TaskExecutionResult, TaskExecutor
-from app.services.workflow_engine import WorkflowEngine, WorkflowTaskDecisionResult
+from app.services.workflow_engine import (
+    WorkflowContinueApplicationResult,
+    WorkflowEngine,
+    WorkflowTaskDecisionResult,
+)
 
 
 class SuccessfulExecutor(TaskExecutor):
@@ -39,6 +43,25 @@ class RecordingExecutor(TaskExecutor):
     async def execute(self, task: Task) -> TaskExecutionResult:
         self.calls += 1
         return self.result
+
+
+class QueueExecutor(TaskExecutor):
+    def __init__(self, results: list[TaskExecutionResult]):
+        self.results = list(results)
+        self.calls: list[str] = []
+
+    async def execute(self, task: Task) -> TaskExecutionResult:
+        self.calls.append(task.title)
+        if not self.results:
+            raise AssertionError("Unexpected task execution.")
+
+        result = self.results.pop(0)
+        return TaskExecutionResult(
+            success=result.success,
+            output=result.output,
+            error=result.error,
+            outcome=result.outcome,
+        )
 
 
 class RecordingDecisionPolicy:
@@ -497,6 +520,359 @@ class WorkflowEngineExecutionTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(result.decision.decision, "replan")
         planner_run.assert_not_called()
+
+    async def test_one_continue_applies_to_subsequent_reasoning_task(self):
+        current_task = Task(title="Current task", capability="reasoning")
+        next_task = Task(title="Next task", capability="reasoning")
+        project = Project(
+            title="Complete project",
+            tasks=[current_task, next_task],
+        )
+        executor = QueueExecutor(
+            [
+                TaskExecutionResult(success=True, output="Current done"),
+                TaskExecutionResult(success=True, output="Next done"),
+            ],
+        )
+        engine = WorkflowEngine(executor=executor)
+
+        result = await engine.execute_task_with_one_continue(
+            project=project,
+            task=current_task,
+        )
+
+        self.assertIsInstance(result, WorkflowContinueApplicationResult)
+        self.assertTrue(result.continue_applied)
+        self.assertEqual(result.continued_task, next_task)
+        self.assertEqual(executor.calls, ["Current task", "Next task"])
+        self.assertEqual(current_task.status, "completed")
+        self.assertEqual(next_task.status, "completed")
+        self.assertEqual(result.original.decision.decision, "continue")
+        self.assertEqual(result.continued.decision.decision, "stop")
+
+    async def test_second_continue_is_exposed_but_not_applied(self):
+        current_task = Task(title="Current task", capability="reasoning")
+        second_task = Task(title="Second task", capability="reasoning")
+        third_task = Task(title="Third task", capability="reasoning")
+        project = Project(
+            title="Complete project",
+            tasks=[current_task, second_task, third_task],
+        )
+        executor = QueueExecutor(
+            [
+                TaskExecutionResult(success=True, output="Current done"),
+                TaskExecutionResult(success=True, output="Second done"),
+                TaskExecutionResult(success=True, output="Should not run"),
+            ],
+        )
+        engine = WorkflowEngine(executor=executor)
+
+        result = await engine.execute_task_with_one_continue(
+            project=project,
+            task=current_task,
+        )
+
+        self.assertTrue(result.continue_applied)
+        self.assertEqual(result.continued.decision.decision, "continue")
+        self.assertEqual(executor.calls, ["Current task", "Second task"])
+        self.assertEqual(third_task.status, "pending")
+
+    async def test_phone_call_continuation_is_blocked_before_calle_execution(self):
+        current_task = Task(title="Reason first", capability="reasoning")
+        phone_task = Task(title="Call customer", capability="phone_call")
+        project = Project(
+            title="Complete project",
+            tasks=[current_task, phone_task],
+        )
+        reasoning_executor = QueueExecutor(
+            [TaskExecutionResult(success=True, output="Reasoned")],
+        )
+        capability_registry = CapabilityRegistry()
+        capability_registry.register("reasoning", reasoning_executor)
+        capability_registry.register("phone_call", CalleTaskExecutor())
+        engine = WorkflowEngine(capability_registry=capability_registry)
+
+        with patch.object(
+            CalleTaskExecutor,
+            "execute",
+            new_callable=AsyncMock,
+        ) as calle_execute:
+            result = await engine.execute_task_with_one_continue(
+                project=project,
+                task=current_task,
+            )
+
+        self.assertFalse(result.continue_applied)
+        self.assertEqual(result.continued_task, phone_task)
+        self.assertIsNone(result.continued)
+        self.assertIn("reasoning", result.continue_skipped_reason)
+        self.assertEqual(reasoning_executor.calls, ["Reason first"])
+        self.assertEqual(phone_task.status, "pending")
+        calle_execute.assert_not_called()
+
+    async def test_non_reasoning_capabilities_are_not_auto_continued(self):
+        blocked_capabilities = [
+            "research",
+            "document_generation",
+            "unknown",
+        ]
+
+        for capability in blocked_capabilities:
+            with self.subTest(capability=capability):
+                current_task = Task(title="Reason first", capability="reasoning")
+                blocked_task = Task(
+                    title=f"Blocked {capability}",
+                    capability=capability,
+                )
+                project = Project(
+                    title="Complete project",
+                    tasks=[current_task, blocked_task],
+                )
+                executor = QueueExecutor(
+                    [TaskExecutionResult(success=True, output="Reasoned")],
+                )
+                engine = WorkflowEngine(executor=executor)
+
+                result = await engine.execute_task_with_one_continue(
+                    project=project,
+                    task=current_task,
+                )
+
+                self.assertFalse(result.continue_applied)
+                self.assertEqual(result.continued_task, blocked_task)
+                self.assertIsNone(result.continued)
+                self.assertEqual(executor.calls, ["Reason first"])
+                self.assertEqual(blocked_task.status, "pending")
+
+    async def test_continue_with_no_next_pending_task_stops_safely(self):
+        current_task = Task(title="Current task", capability="reasoning")
+        project = Project(title="Complete project", tasks=[current_task])
+        executor = QueueExecutor(
+            [TaskExecutionResult(success=True, output="Done")],
+        )
+        decision_policy = RecordingDecisionPolicy(
+            TaskDecision(
+                decision="continue",
+                reason="Forced continue for state-race coverage.",
+            )
+        )
+        engine = WorkflowEngine(
+            executor=executor,
+            decision_policy=decision_policy,
+        )
+
+        result = await engine.execute_task_with_one_continue(
+            project=project,
+            task=current_task,
+        )
+
+        self.assertFalse(result.continue_applied)
+        self.assertIsNone(result.continued_task)
+        self.assertIsNone(result.continued)
+        self.assertIn("No subsequent pending task", result.continue_skipped_reason)
+        self.assertEqual(executor.calls, ["Current task"])
+
+    async def test_second_task_failure_is_exposed_and_stops(self):
+        current_task = Task(title="Current task", capability="reasoning")
+        second_task = Task(title="Second task", capability="reasoning")
+        third_task = Task(title="Third task", capability="reasoning")
+        project = Project(
+            title="Complete project",
+            tasks=[current_task, second_task, third_task],
+        )
+        executor = QueueExecutor(
+            [
+                TaskExecutionResult(success=True, output="Current done"),
+                TaskExecutionResult(success=False, error="Second failed"),
+            ],
+        )
+        engine = WorkflowEngine(executor=executor)
+
+        result = await engine.execute_task_with_one_continue(
+            project=project,
+            task=current_task,
+        )
+
+        self.assertTrue(result.continue_applied)
+        self.assertFalse(result.continued.execution_result.success)
+        self.assertEqual(
+            result.continued.execution_result.observation.outcome,
+            "failed",
+        )
+        self.assertEqual(result.continued.decision.decision, "retry")
+        self.assertEqual(executor.calls, ["Current task", "Second task"])
+        self.assertEqual(third_task.status, "pending")
+
+    async def test_second_task_unsupported_is_exposed_and_stops(self):
+        current_task = Task(title="Current task", capability="setup")
+        second_task = Task(title="Second task", capability="reasoning")
+        third_task = Task(title="Third task", capability="reasoning")
+        project = Project(
+            title="Complete project",
+            tasks=[current_task, second_task, third_task],
+        )
+        setup_executor = QueueExecutor(
+            [TaskExecutionResult(success=True, output="Current done")],
+        )
+        capability_registry = CapabilityRegistry()
+        capability_registry.register("setup", setup_executor)
+        engine = WorkflowEngine(capability_registry=capability_registry)
+
+        result = await engine.execute_task_with_one_continue(
+            project=project,
+            task=current_task,
+        )
+
+        self.assertTrue(result.continue_applied)
+        self.assertEqual(
+            result.continued.execution_result.observation.outcome,
+            "unsupported",
+        )
+        self.assertEqual(result.continued.decision.decision, "replan")
+        self.assertEqual(setup_executor.calls, ["Current task"])
+        self.assertEqual(third_task.status, "pending")
+
+    async def test_second_task_authority_required_is_exposed_and_stops(self):
+        current_task = Task(title="Current task", capability="setup")
+        second_task = Task(title="Second task", capability="reasoning")
+        third_task = Task(title="Third task", capability="reasoning")
+        project = Project(
+            title="Complete project",
+            tasks=[current_task, second_task, third_task],
+        )
+        setup_executor = QueueExecutor(
+            [TaskExecutionResult(success=True, output="Current done")],
+        )
+        reasoning_executor = QueueExecutor(
+            [
+                TaskExecutionResult(
+                    success=False,
+                    error="Authority required.",
+                    outcome="authority_required",
+                ),
+            ],
+        )
+        capability_registry = CapabilityRegistry()
+        capability_registry.register("setup", setup_executor)
+        capability_registry.register("reasoning", reasoning_executor)
+        engine = WorkflowEngine(capability_registry=capability_registry)
+
+        result = await engine.execute_task_with_one_continue(
+            project=project,
+            task=current_task,
+        )
+
+        self.assertTrue(result.continue_applied)
+        self.assertEqual(
+            result.continued.execution_result.observation.outcome,
+            "authority_required",
+        )
+        self.assertEqual(result.continued.decision.decision, "request_authority")
+        self.assertEqual(reasoning_executor.calls, ["Second task"])
+        self.assertEqual(third_task.status, "pending")
+
+    async def test_retry_decision_is_not_applied_by_one_continue(self):
+        current_task = Task(
+            title="Current task",
+            capability="reasoning",
+            retry_count=1,
+        )
+        next_task = Task(title="Next task", capability="reasoning")
+        project = Project(
+            title="Complete project",
+            tasks=[current_task, next_task],
+        )
+        executor = QueueExecutor(
+            [TaskExecutionResult(success=False, error="Failed")],
+        )
+        engine = WorkflowEngine(executor=executor)
+
+        result = await engine.execute_task_with_one_continue(
+            project=project,
+            task=current_task,
+        )
+
+        self.assertEqual(result.original.decision.decision, "retry")
+        self.assertFalse(result.continue_applied)
+        self.assertEqual(executor.calls, ["Current task"])
+        self.assertEqual(current_task.retry_count, 1)
+        self.assertEqual(next_task.status, "pending")
+
+    async def test_replan_decision_is_not_applied_by_one_continue(self):
+        current_task = Task(
+            title="Current task",
+            capability="reasoning",
+            retry_count=2,
+        )
+        next_task = Task(title="Next task", capability="reasoning")
+        project = Project(
+            title="Complete project",
+            tasks=[current_task, next_task],
+        )
+        executor = QueueExecutor(
+            [TaskExecutionResult(success=False, error="Failed")],
+        )
+        engine = WorkflowEngine(executor=executor)
+
+        with patch(
+            "app.agents.planner_agent.PlannerAgent.run",
+            new_callable=AsyncMock,
+        ) as planner_run:
+            result = await engine.execute_task_with_one_continue(
+                project=project,
+                task=current_task,
+            )
+
+        self.assertEqual(result.original.decision.decision, "replan")
+        self.assertFalse(result.continue_applied)
+        self.assertEqual(executor.calls, ["Current task"])
+        self.assertEqual(next_task.status, "pending")
+        planner_run.assert_not_called()
+
+    async def test_request_authority_decision_is_not_applied_by_one_continue(self):
+        current_task = Task(title="Current task", capability="reasoning")
+        next_task = Task(title="Next task", capability="reasoning")
+        project = Project(
+            title="Complete project",
+            tasks=[current_task, next_task],
+        )
+        executor = QueueExecutor(
+            [
+                TaskExecutionResult(
+                    success=False,
+                    error="Authority required.",
+                    outcome="authority_required",
+                ),
+            ],
+        )
+        engine = WorkflowEngine(executor=executor)
+
+        result = await engine.execute_task_with_one_continue(
+            project=project,
+            task=current_task,
+        )
+
+        self.assertEqual(result.original.decision.decision, "request_authority")
+        self.assertFalse(result.continue_applied)
+        self.assertEqual(executor.calls, ["Current task"])
+        self.assertEqual(next_task.status, "pending")
+
+    async def test_stop_decision_is_not_applied_by_one_continue(self):
+        current_task = Task(title="Current task", capability="reasoning")
+        project = Project(title="Complete project", tasks=[current_task])
+        executor = QueueExecutor(
+            [TaskExecutionResult(success=True, output="Done")],
+        )
+        engine = WorkflowEngine(executor=executor)
+
+        result = await engine.execute_task_with_one_continue(
+            project=project,
+            task=current_task,
+        )
+
+        self.assertEqual(result.original.decision.decision, "stop")
+        self.assertFalse(result.continue_applied)
+        self.assertEqual(executor.calls, ["Current task"])
 
 
 class StartupImportTests(unittest.TestCase):

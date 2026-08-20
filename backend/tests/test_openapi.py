@@ -162,6 +162,49 @@ class OpenAPIDocumentationTests(unittest.TestCase):
             "#/components/schemas/TaskDecisionSchema",
         )
 
+    def test_execution_response_exposes_optional_continuation(self):
+        properties = self.schemas["ExecutionResponse"]["properties"]
+        continuation = properties["continuation"]
+
+        self.assertIn("continuation", properties)
+        self.assertEqual(
+            continuation["anyOf"][0]["$ref"],
+            "#/components/schemas/ExecutionContinuationSchema",
+        )
+
+    def test_execution_continuation_schema_exposes_public_fields(self):
+        properties = self.schemas["ExecutionContinuationSchema"]["properties"]
+        expected = {
+            "continue_applied",
+            "continue_skipped_reason",
+            "continued_task",
+            "continued_execution",
+            "continued_observation",
+            "continued_decision",
+        }
+
+        self.assertEqual(set(properties), expected)
+
+    def test_execution_continuation_schema_reuses_public_schemas(self):
+        properties = self.schemas["ExecutionContinuationSchema"]["properties"]
+
+        self.assertEqual(
+            properties["continued_task"]["anyOf"][0]["$ref"],
+            "#/components/schemas/ExecutionCurrentTaskSchema",
+        )
+        self.assertEqual(
+            properties["continued_execution"]["anyOf"][0]["$ref"],
+            "#/components/schemas/ExecutionResultSchema",
+        )
+        self.assertEqual(
+            properties["continued_observation"]["anyOf"][0]["$ref"],
+            "#/components/schemas/TaskObservationSchema",
+        )
+        self.assertEqual(
+            properties["continued_decision"]["anyOf"][0]["$ref"],
+            "#/components/schemas/TaskDecisionSchema",
+        )
+
     def test_task_inputs_are_provider_neutral_objects(self):
         for schema_name in ("PlannerTaskSchema", "ExecutionCurrentTaskSchema"):
             with self.subTest(schema=schema_name):

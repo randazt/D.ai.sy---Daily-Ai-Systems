@@ -36,11 +36,12 @@ class ExecutionAgent(BaseAgent):
                 "message": "All tasks are complete."
             }
 
-        workflow_result = await workflow_engine.execute_task_with_decision(
+        workflow_result = await workflow_engine.execute_task_with_one_continue(
             project=project,
             task=current_task,
         )
-        execution_result = workflow_result.execution_result
+        original_result = workflow_result.original
+        execution_result = original_result.execution_result
 
         return {
             "agent": "execution",
@@ -62,14 +63,60 @@ class ExecutionAgent(BaseAgent):
                 "output": execution_result.output,
                 "error": execution_result.error,
             },
-            "decision": asdict(workflow_result.decision),
+            "decision": asdict(original_result.decision),
             "observation": (
                 asdict(execution_result.observation)
                 if execution_result.observation is not None
                 else None
             ),
+            "continuation": self._build_continuation_response(workflow_result),
         }
 
     @property
     def name(self) -> str:
         return "execution"
+
+    @classmethod
+    def _build_continuation_response(cls, workflow_result):
+        continued = workflow_result.continued
+        continued_execution = (
+            continued.execution_result if continued is not None else None
+        )
+
+        return {
+            "continue_applied": workflow_result.continue_applied,
+            "continue_skipped_reason": workflow_result.continue_skipped_reason,
+            "continued_task": (
+                cls._build_task_response(workflow_result.continued_task)
+                if workflow_result.continued_task is not None
+                else None
+            ),
+            "continued_execution": (
+                {
+                    "success": continued_execution.success,
+                    "output": continued_execution.output,
+                    "error": continued_execution.error,
+                }
+                if continued_execution is not None
+                else None
+            ),
+            "continued_observation": (
+                asdict(continued_execution.observation)
+                if continued_execution is not None
+                and continued_execution.observation is not None
+                else None
+            ),
+            "continued_decision": (
+                asdict(continued.decision) if continued is not None else None
+            ),
+        }
+
+    @staticmethod
+    def _build_task_response(task):
+        return {
+            "title": task.title,
+            "description": task.description,
+            "capability": task.capability,
+            "status": task.status,
+            "output": task.output,
+        }
