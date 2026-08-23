@@ -28,11 +28,31 @@ D.AI.SY combines modern large language models, persistent memory, structured rea
 
 **Version:** 0.1.0
 
-**Development Status:** Active
+**Development Status:** Active — Competition Deployment Operational
 
-The backend foundation has been successfully established and verified.
+D.AI.SY is deployed on Google Cloud Run with a working agentic execution pipeline.
 
-Core infrastructure is operational and ready for expansion into persistent memory, agent orchestration, and long-term user context.
+The current implementation supports:
+
+- Goal-to-project planning
+- Google Gemini-powered reasoning
+- Google Agent Development Kit (ADK) task execution
+- Capability-based task orchestration
+- Task observation and decision evaluation
+- Bounded autonomous continuation
+- Human authority boundaries for external real-world actions
+- CALL-E integration with real calls disabled by default
+- Interactive Swagger/OpenAPI testing
+
+The current competition deployment demonstrates the core agentic loop:
+
+> **Goal → Plan → Execute → Observe → Decide → Bounded Continuation**
+
+Deployment proof, evidence, and the final demo workflow are tracked in:
+
+- [Live Agentic Proof](docs/submission/LIVE_AGENTIC_PROOF.md)
+- [Submission Evidence Index](docs/submission/SUBMISSION_EVIDENCE_INDEX.md)
+- [All Things Agentic Demo Runbook](docs/submission/ALL_THINGS_AGENTIC_DEMO_RUNBOOK.md)
 
 ---
 
@@ -44,6 +64,7 @@ Core infrastructure is operational and ready for expansion into persistent memor
 - REST API architecture
 - Request/Response validation using Pydantic
 - Modular service architecture
+- Cloud Run-compatible container packaging
 - Environment variable configuration
 - Secure API key management
 - Swagger/OpenAPI documentation
@@ -51,29 +72,50 @@ Core infrastructure is operational and ready for expansion into persistent memor
 
 ---
 
-## AI & Agentic Integration
+## Agentic Execution
 
-- Google Gemini 3.5 Flash Lite
-- Google GenAI SDK
-- Google Agent Development Kit (ADK)
-- PlannerAgent for structured project planning
-- ExecutionAgent for task execution
-- WorkflowEngine for agentic orchestration
-- TaskObservation for execution-state capture
+- Agent registry and routing
+- PlannerAgent for goal-to-project task planning
+- ExecutionAgent for task execution requests
+- WorkflowEngine for task lifecycle management
+- CapabilityRegistry for executor selection
+- TaskObservation output after execution
 - TaskDecision for post-execution policy decisions
-- Bounded one-step autonomous continuation
+- DecisionPolicy for next-step evaluation
+- Bounded autonomous continuation for safe reasoning tasks
 - Human authority boundary for external actions
-- CALL-E capability integration with real calls disabled by default
+
+---
+
+## AI and Google Integration
+
+- Google Gemini 3.5 Flash Lite-powered planning and reasoning
+- Google GenAI SDK integration
+- Google ADK-backed reasoning executor
+- Service abstraction layer around model access
+- Verified prompt/response pipeline
+- Google Cloud Run deployment
+- Secret Manager-based Gemini credential configuration in deployment
 
 Example:
 
 ```
 User:
-What is 17 multiplied by 43?
+Plan a reasoning-only D.AI.SY demo that helps a user clarify a vague product idea.
 
-Gemini:
-17 multiplied by 43 is 731.
+D.AI.SY:
+Creates a structured project with reasoning tasks, executes the first task, observes the result, evaluates the decision, and applies one bounded continuation.
 ```
+
+---
+
+## CALL-E Integration
+
+- CALL-E task executor implemented
+- Phone-call capability routed through explicit task capability metadata
+- Real calls disabled by default through `DAISY_ENABLE_REAL_CALLS=0`
+- Destination authority boundaries for external phone actions
+- Code and test coverage for CALL-E safety behavior
 
 ---
 
@@ -85,7 +127,7 @@ Implemented:
 |-----------|----------|-----------------------------|
 | / | GET | API Status |
 | /health | GET | Health Check |
-| /chat | POST | Gemini Chat |
+| /chat | POST | Conversation, planning, and execution routing |
 
 ---
 
@@ -99,6 +141,8 @@ Implemented:
 - Repository history cleaned to remove exposed API key
 - GitHub Push Protection resolved
 - API key regenerated
+- Runtime Gemini credentials supplied through Google Secret Manager
+- External real-world actions gated behind explicit safety controls
 
 ---
 
@@ -112,6 +156,7 @@ backend/
 │   ├── api/
 │   ├── config/
 │   ├── firestore/
+│   ├── knowledge/
 │   ├── memory/
 │   ├── models/
 │   ├── orchestration/
@@ -130,6 +175,7 @@ docs/
 │
 ├── architecture/
 ├── product/
+├── submission/
 ├── ui/
 ├── ARCHITECTURE.md
 └── PRODUCT.md
@@ -141,17 +187,23 @@ docs/
 
 ## Backend
 
-- Python 3.14
+- Python 3.12 container runtime
 - FastAPI
 - Uvicorn
 - Pydantic
 - python-dotenv
 
-## AI
+## AI and Agent Execution
 
 - Google Gemini 3.5 Flash Lite
 - Google GenAI SDK
 - Google Agent Development Kit (ADK)
+
+## Deployment
+
+- Google Cloud Run
+- Google Secret Manager
+- Docker
 
 ## Development
 
@@ -193,6 +245,26 @@ docs/
 
 ✅ Successfully pushed cleaned repository to GitHub
 
+✅ Added multi-agent routing
+
+✅ Added goal-to-project planning
+
+✅ Added task capability metadata
+
+✅ Added workflow execution lifecycle
+
+✅ Added Google ADK reasoning executor
+
+✅ Added guarded CALL-E executor
+
+✅ Added task observation and decision evaluation
+
+✅ Added bounded autonomous continuation
+
+✅ Packaged backend for Cloud Run
+
+✅ Verified live Cloud Run competition deployment
+
 ---
 
 # Documentation
@@ -211,6 +283,12 @@ docs/
 - Product Overview
 - Competition Demonstration
 
+## Submission
+
+- Live Agentic Proof
+- Submission Evidence Index
+- All Things Agentic Demo Runbook
+
 ## UI
 
 - Conversation Workspace
@@ -225,58 +303,61 @@ docs/
 - Gemini
 - API
 - Documentation
+- Secure configuration
 
 Status:
 **Complete**
 
 ---
 
-## Phase 2 — Memory
+## Phase 2 — Agentic Planning and Execution
 
-Planned:
-
-- Firestore
-- Conversation Memory
-- User Profiles
-- Growth Passport persistence
-
-Status:
-**In Progress**
-
----
-
-## Phase 3 — Agent Framework ✅
-
-Implemented:
-
-- Google ADK integration
+- Agent registry
 - PlannerAgent
 - ExecutionAgent
+- Google ADK integration
+- Capability-based orchestration
 - WorkflowEngine
 - Capability registry
+- Observation and decision evaluation
 - TaskObservation
 - TaskDecision
-- Bounded autonomous continuation
+- Bounded continuation
 - Human authority boundary
 - CALL-E task executor with safe-call controls
 
-Status: **Core agent framework operational**
+Status:
+**Core agent framework operational**
 
 ---
 
-## Phase 4 — Cognitive Platform
+## Phase 3 — Competition Deployment
+
+- Cloud Run deployment
+- Gemini credential configuration through Secret Manager
+- Live planning proof
+- Live execution proof
+- Demo runbook
+- Submission evidence index
+
+Status:
+**Operational**
+
+---
+
+## Phase 4 — Persistent Memory
 
 Planned:
 
-- Context Packet generation
-- Multi-agent orchestration
-- Long-term reasoning
-- Decision support
-- Personal growth tracking
+- Firestore integration
+- Conversation history
+- Project persistence
+- Execution history
+- Growth Passport storage
 
 ---
 
-## Phase 5 — User Experience
+## Phase 5 — Product Experience
 
 Planned:
 
@@ -284,6 +365,7 @@ Planned:
 - Authentication
 - Dashboard
 - Growth Passport visualization
+- Workspace continuity
 
 ---
 
@@ -335,34 +417,32 @@ Features are only documented as complete after successful implementation and ver
 
 # Next Immediate Milestones
 
-- Firestore integration
-- Persistent conversation memory
-- Growth Passport storage
-- Google ADK integration
-- Multi-agent orchestration
+- Preserve final competition demo evidence
+- Capture final video and screenshots
+- Run a fresh final backend test pass before submission packaging
+- Continue Firestore-backed persistent memory
+- Build the user-facing conversation workspace
+- Expand agent capabilities
 
 ---
 
 # Project Status
 
-D.AI.SY has successfully transitioned from concept to a functioning AI platform.
+D.AI.SY has successfully transitioned from concept to a deployed agentic AI backend.
 
 The project now possesses:
 
 - Working backend
-- Live AI integration
-- Modular architecture
-- Secure configuration
-- Public repository
-- Documentation framework
+- Live Gemini integration
+- Modular agent architecture
+- Capability-based execution
+- Structured task observation
+- Decision evaluation
+- Bounded autonomous continuation
+- Secure Cloud Run deployment
+- Competition evidence framework
 
-# Next Immediate Milestones
-
-- Persistent conversation memory
-- Firestore integration
-- Growth Passport storage
-- User-facing web interface
-- Expanded agent capabilities
+The next development milestone focuses on final submission artifact capture and persistent memory.
 
 ---
 
@@ -374,7 +454,7 @@ The project now possesses:
 D.A.I.S.Y. is deployed on Google Cloud Run.
 
 Swagger interface:
-https://daisy-backend-pbhnglpapq-ue.a.run.app/docs
+[https://daisy-backend-pbhnglpapq-ue.a.run.app/docs](https://daisy-backend-pbhnglpapq-ue.a.run.app/docs)
 
 1. Open the Swagger interface.
 2. Expand `POST /chat`.
