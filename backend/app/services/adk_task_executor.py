@@ -10,6 +10,29 @@ from app.services.task_executor import TaskExecutionResult, TaskExecutor
 load_dotenv()
 
 
+CLAIM_BOUNDARY_INSTRUCTION = (
+    "D.A.I.S.Y. is the agentic system performing the reasoning task. "
+    "A user-proposed product, business, service, or concept is separate from "
+    "D.A.I.S.Y. Frame hypothetical or unverified product capabilities as "
+    "proposals, hypotheses, candidate features, or capabilities that could "
+    "exist or would need to be implemented or validated. Do not imply "
+    "D.A.I.S.Y. currently implements a proposed product's capabilities unless "
+    "explicitly established, while preserving useful creative reasoning."
+)
+
+
+EVIDENCE_BOUNDARY_INSTRUCTION = (
+    "D.A.I.S.Y. may reason creatively and generate hypotheses. External "
+    "facts, statistics, market behaviors, prices, performance claims, "
+    "availability claims, or business outcomes not supplied by the "
+    "task/context must not be presented as established facts. Frame them as "
+    "assumptions, hypotheses, estimates, illustrative examples, or items "
+    "requiring validation. Do not fabricate citations or imply external "
+    "verification occurred, while preserving useful business/product "
+    "reasoning."
+)
+
+
 class AdkTaskExecutor(TaskExecutor):
     """
     Executes reasoning tasks through Google ADK.
@@ -19,12 +42,7 @@ class AdkTaskExecutor(TaskExecutor):
         self._model = model or os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 
     async def execute(self, task: Task) -> TaskExecutionResult:
-        prompt = (
-            "You are D.A.I.S.Y.'s execution backend.\n\n"
-            "Execute the following task and return a concise execution result.\n\n"
-            f"Task Title: {task.title}\n"
-            f"Task Description: {task.description}\n"
-        )
+        prompt = self._build_execution_prompt(task)
 
         try:
             output = await self._run_with_adk(prompt)
@@ -53,6 +71,25 @@ class AdkTaskExecutor(TaskExecutor):
             output=output,
         )
 
+    @staticmethod
+    def _build_execution_prompt(task: Task) -> str:
+        return (
+            "You are D.A.I.S.Y.'s execution backend.\n\n"
+            f"{CLAIM_BOUNDARY_INSTRUCTION}\n"
+            f"{EVIDENCE_BOUNDARY_INSTRUCTION}\n\n"
+            "Execute the following task and return a concise execution result.\n\n"
+            f"Task Title: {task.title}\n"
+            f"Task Description: {task.description}\n"
+        )
+
+    @staticmethod
+    def _build_agent_instruction() -> str:
+        return (
+            "You execute one D.A.I.S.Y. task at a time and return a concise, "
+            f"actionable result. {CLAIM_BOUNDARY_INSTRUCTION} "
+            f"{EVIDENCE_BOUNDARY_INSTRUCTION}"
+        )
+
     async def _run_with_adk(self, prompt: str) -> str:
         from google.adk import Agent
         from google.adk.runners import InMemoryRunner
@@ -61,10 +98,7 @@ class AdkTaskExecutor(TaskExecutor):
         agent = Agent(
             name="daisy_reasoning_executor",
             model=self._model,
-            instruction=(
-                "You execute one D.A.I.S.Y. task at a time and return a concise,"
-                " actionable result."
-            ),
+            instruction=self._build_agent_instruction(),
         )
         runner = InMemoryRunner(
             agent=agent,
