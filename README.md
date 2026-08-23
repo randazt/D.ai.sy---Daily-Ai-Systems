@@ -20,7 +20,7 @@ The platform guides users through a progression of:
 
 Artificial Intelligence should augment human intelligence—not replace it.
 
-D.AI.SY combines modern large language models, persistent memory, structured reasoning, and multi-agent collaboration into an adaptive system that helps people organize thoughts, make better decisions, and continue growing over time.
+D.AI.SY combines modern large language models, structured reasoning, and multi-agent collaboration into an adaptive system that helps people organize thoughts, make better decisions, and continue growing over time. Persistent memory and long-term continuity are planned future components.
 
 ---
 
@@ -39,14 +39,21 @@ The current implementation supports:
 - Google Agent Development Kit (ADK) task execution
 - Capability-based task orchestration
 - Task observation and decision evaluation
-- Bounded autonomous continuation
+- Bounded autonomous continuation for at most one additional eligible reasoning task
+- Human-decision clarification before planning when consequential human judgment is required
+- Distinction between consequential human preferences and evidence-resolvable uncertainty
+- Adaptive planning after human clarification
+- Stateless, signed, time-limited clarification context
+- Claim and evidence boundaries in reasoning output
 - Human authority boundaries for external real-world actions
 - CALL-E integration with real calls disabled by default
 - Interactive Swagger/OpenAPI testing
 
 The current competition deployment demonstrates the core agentic loop:
 
-> **Goal → Plan → Execute → Observe → Decide → Bounded Continuation**
+> **Goal → Human-Decision Boundary → Clarify When Needed → Human Direction → Adaptive Plan → Execute → Observe → Decide → Bounded Continuation**
+
+Evidence-resolvable uncertainty is handled through discovery, research, comparison, or validation inside the plan rather than unnecessarily requiring a human decision.
 
 Deployment proof, evidence, and the final demo workflow are tracked in:
 
@@ -87,9 +94,21 @@ Deployment proof, evidence, and the final demo workflow are tracked in:
 
 ---
 
+## Collaborative Partner Behavior
+
+- ClarificationService for pre-planning clarification when the user's request contains a consequential unresolved human priority
+- Human-decision boundary that keeps governing preferences and trade-offs with the human
+- Discovery-in-plan behavior for uncertainty that can be resolved through research, comparison, reasoning, or validation
+- Adaptive planner handoff after clarification using the original goal plus the human's answer
+- Signed clarification context that is stateless, time-limited, and rejected if malformed, tampered with, or expired
+- Claim boundary separating hypothetical product capabilities from implemented D.AI.SY capabilities
+- Evidence boundary requiring unsupported external factual assertions to be framed as assumptions, hypotheses, estimates, illustrative examples, or validation targets
+
+---
+
 ## AI and Google Integration
 
-- Google Gemini 3.5 Flash Lite-powered planning and reasoning
+- Google Gemini `gemini-3.5-flash-lite`-powered planning and reasoning
 - Google GenAI SDK integration
 - Google ADK-backed reasoning executor
 - Service abstraction layer around model access
@@ -101,10 +120,10 @@ Example:
 
 ```
 User:
-Plan a reasoning-only D.AI.SY demo that helps a user clarify a vague product idea.
+I'm trying to validate an affordable AI service for small local businesses that miss customer calls. I'm torn between getting to a revenue test quickly and spending more time deeply understanding the customer problem first.
 
 D.AI.SY:
-Creates a structured project with reasoning tasks, executes the first task, observes the result, evaluates the decision, and applies one bounded continuation.
+Asks which priority should govern the plan rather than silently choosing. When the human chooses customer understanding and says they do not want to build yet, D.AI.SY creates a discovery-oriented plan reflecting that direction.
 ```
 
 ---
@@ -143,6 +162,10 @@ Implemented:
 - API key regenerated
 - Runtime Gemini credentials supplied through Google Secret Manager
 - External real-world actions gated behind explicit safety controls
+- Clarification context is stateless and time-limited
+- Clarification context is integrity-protected using HMAC signing
+- Clarification signing uses a dedicated production secret supplied through Google Secret Manager
+- Malformed, tampered, or expired clarification context is rejected
 
 ---
 
@@ -154,13 +177,9 @@ backend/
 ├── app/
 │   ├── agents/
 │   ├── api/
-│   ├── config/
-│   ├── firestore/
 │   ├── knowledge/
-│   ├── memory/
 │   ├── models/
 │   ├── orchestration/
-│   ├── prompts/
 │   ├── schemas/
 │   ├── services/
 │   └── main.py
@@ -195,7 +214,7 @@ docs/
 
 ## AI and Agent Execution
 
-- Google Gemini 3.5 Flash Lite
+- Google Gemini `gemini-3.5-flash-lite`
 - Google GenAI SDK
 - Google Agent Development Kit (ADK)
 
@@ -261,6 +280,20 @@ docs/
 
 ✅ Added bounded autonomous continuation
 
+✅ Added human-decision clarification boundary
+
+✅ Added discovery-vs-human-judgment behavior
+
+✅ Added adaptive planning after clarification
+
+✅ Added stateless clarification context
+
+✅ Added claim boundary
+
+✅ Added evidence boundary
+
+✅ Verified Collaborative Partner behavior in production
+
 ✅ Packaged backend for Cloud Run
 
 ✅ Verified live Cloud Run competition deployment
@@ -274,7 +307,7 @@ docs/
 - System Overview
 - API Contracts
 - ADK Orchestration
-- Firestore Data Model
+- Planned Firestore Data Model
 - Context Packet
 
 ## Product
@@ -325,6 +358,11 @@ Status:
 - Bounded continuation
 - Human authority boundary
 - CALL-E task executor with safe-call controls
+- Human-decision clarification boundary
+- Discovery-in-plan behavior
+- Adaptive planning after clarification
+- Stateless signed clarification context
+- Claim and evidence boundaries
 
 Status:
 **Core agent framework operational**
@@ -375,7 +413,7 @@ D.AI.SY is developed according to several core principles:
 
 ### Human Agency First
 
-AI should strengthen independent thinking rather than replace it.
+AI should strengthen independent thinking rather than replace it. Consequential human preferences remain with the human.
 
 ---
 
@@ -386,6 +424,8 @@ Final decisions always belong to the user.
 AI assists.
 
 Humans decide.
+
+D.AI.SY clarifies rather than silently selecting a governing priority when planning depends on a human value judgment.
 
 ---
 
@@ -413,6 +453,8 @@ Configuration remains environment-based.
 
 Features are only documented as complete after successful implementation and verification.
 
+Unsupported external claims are framed as assumptions, hypotheses, estimates, illustrative examples, or items requiring validation.
+
 ---
 
 # Next Immediate Milestones
@@ -439,6 +481,11 @@ The project now possesses:
 - Structured task observation
 - Decision evaluation
 - Bounded autonomous continuation
+- Human-decision clarification before planning
+- Discovery-vs-human-judgment behavior
+- Adaptive planning from human clarification
+- Stateless signed clarification context
+- Claim and evidence boundaries for reasoning output
 - Secure Cloud Run deployment
 - Competition evidence framework
 
@@ -451,7 +498,7 @@ The next development milestone focuses on final submission artifact capture and 
 
 ### Live hosted demo
 
-D.A.I.S.Y. is deployed on Google Cloud Run.
+D.AI.SY is deployed on Google Cloud Run.
 
 Swagger interface:
 [https://daisy-backend-pbhnglpapq-ue.a.run.app/docs](https://daisy-backend-pbhnglpapq-ue.a.run.app/docs)
@@ -461,19 +508,59 @@ Swagger interface:
 3. Click **Try it out**.
 4. Submit:
 
+Step 1 — Human priority conflict
+
 {
-  "message": "Plan a project to help me decide how to validate an affordable AI service for small local businesses that miss customer calls. I don't know who my first customer should be or what I should validate first. Break this goal into safe reasoning tasks that lead to one clear next step."
+  "message": "I'm trying to validate an affordable AI service for small local businesses that miss customer calls. I'm torn between getting to a revenue test as quickly as possible and spending more time deeply understanding the customer problem first. Help me build the right plan."
 }
 
-5. Confirm the response contains a structured project plan and tasks.
-6. Submit:
+Expected:
+
+- `agent = clarification`
+- `status = needs_clarification`
+- exactly one clarification question
+- `clarification_token`
+- `expires_at`
+- no project yet
+
+Step 2 — Human direction
+
+Submit the clarification answer with the returned `clarification_token`:
+
+{
+  "message": "Understanding the customer problem matters more. I don't want to build anything yet.",
+  "clarification_token": "<returned clarification_token>"
+}
+
+Expected:
+
+- planner runs only after the answer
+- project is created
+- plan adapts toward customer discovery
+
+Representative production-verified task types included customer interview targeting, interview-guide creation, qualitative interviews, and discovery synthesis. Exact Gemini-generated task wording may vary.
+
+Step 3 — Execute
+
+Submit:
 
 {
   "message": "execute"
 }
 
-7. Confirm the execution response contains task execution evidence,
-   `observation`, `decision`, and `continuation`.
+Expected:
+
+- `agent = execution`
+- task execution evidence
+- `observation`
+- `decision`
+- `continuation`
+
+Automatic continuation is limited to one additional reasoning task. Non-reasoning or authority-requiring work is not automatically executed merely because a decision says `continue`.
+
+Secondary check:
+
+Evidence-resolvable uncertainty, such as determining which customer segment has the largest problem, can proceed directly into planning and discovery without unnecessary clarification.
 
 Health endpoint:
 https://daisy-backend-pbhnglpapq-ue.a.run.app/health
