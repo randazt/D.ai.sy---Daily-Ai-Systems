@@ -346,3 +346,36 @@ The next development milestone focuses on persistent memory and agent orchestrat
 ---
 
 *"Helping people become more capable—not more dependent."*
+## Reproducible Testing
+
+### Live hosted demo
+
+D.A.I.S.Y. is deployed on Google Cloud Run.
+
+Swagger interface:
+https://daisy-backend-pbhnglpapq-ue.a.run.app/docs
+
+1. Open the Swagger interface.
+2. Expand `POST /chat`.
+3. Click **Try it out**.
+4. Submit:
+
+{
+  "message": "Plan a project to help me decide how to validate an affordable AI service for small local businesses that miss customer calls. I don't know who my first customer should be or what I should validate first. Break this goal into safe reasoning tasks that lead to one clear next step."
+}
+
+5. Confirm the response contains a structured project plan and tasks.
+6. Submit:
+
+{
+  "message": "execute"
+}
+
+7. Confirm the execution response contains task execution evidence,
+   `observation`, `decision`, and `continuation`.
+
+The competition deployment uses Google Cloud Run, the Google GenAI SDK,
+and Google Agent Development Kit (ADK).
+
+Real-world CALL-E phone actions are disabled in the competition deployment
+unless explicitly authorized.
