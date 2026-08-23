@@ -51,12 +51,19 @@ Core infrastructure is operational and ready for expansion into persistent memor
 
 ---
 
-## AI Integration
+## AI & Agentic Integration
 
-- Google Gemini 3.5 Flash Lite integration
-- Service abstraction layer
-- Chat endpoint connected to Gemini
-- Verified prompt/response pipeline
+- Google Gemini 3.5 Flash Lite
+- Google GenAI SDK
+- Google Agent Development Kit (ADK)
+- PlannerAgent for structured project planning
+- ExecutionAgent for task execution
+- WorkflowEngine for agentic orchestration
+- TaskObservation for execution-state capture
+- TaskDecision for post-execution policy decisions
+- Bounded one-step autonomous continuation
+- Human authority boundary for external actions
+- CALL-E capability integration with real calls disabled by default
 
 Example:
 
@@ -142,8 +149,9 @@ docs/
 
 ## AI
 
-- Google Gemini 2.5 Flash Lite
+- Google Gemini 3.5 Flash Lite
 - Google GenAI SDK
+- Google Agent Development Kit (ADK)
 
 ## Development
 
@@ -237,15 +245,22 @@ Status:
 
 ---
 
-## Phase 3 — Agent Framework
+## Phase 3 — Agent Framework ✅
 
-Planned:
+Implemented:
 
 - Google ADK integration
-- Planner Agent
-- Reflection Agent
-- Memory Agent
-- Research Agent
+- PlannerAgent
+- ExecutionAgent
+- WorkflowEngine
+- Capability registry
+- TaskObservation
+- TaskDecision
+- Bounded autonomous continuation
+- Human authority boundary
+- CALL-E task executor with safe-call controls
+
+Status: **Core agent framework operational**
 
 ---
 
@@ -341,7 +356,13 @@ The project now possesses:
 - Public repository
 - Documentation framework
 
-The next development milestone focuses on persistent memory and agent orchestration.
+# Next Immediate Milestones
+
+- Persistent conversation memory
+- Firestore integration
+- Growth Passport storage
+- User-facing web interface
+- Expanded agent capabilities
 
 ---
 
@@ -373,6 +394,9 @@ https://daisy-backend-pbhnglpapq-ue.a.run.app/docs
 
 7. Confirm the execution response contains task execution evidence,
    `observation`, `decision`, and `continuation`.
+
+Health endpoint:
+https://daisy-backend-pbhnglpapq-ue.a.run.app/health
 
 The competition deployment uses Google Cloud Run, the Google GenAI SDK,
 and Google Agent Development Kit (ADK).
