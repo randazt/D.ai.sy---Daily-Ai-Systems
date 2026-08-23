@@ -1,485 +1,169 @@
-# D.AI.SY (Daily AI Systems)
+D.AI.SY Submission Realignment — Phase 2A: README
 
-> **An Adaptive Cognitive Accessibility & Human Agency Platform**
+The production backend is frozen and has passed Collaborative Partner production acceptance. Modify README.md only so the documentation accurately reflects the currently deployed and verified system.
 
----
+Do not modify backend code, tests, deployment configuration, Cloud Run, Secret Manager, IAM, or any other documentation file. Do not commit, push, or deploy.
 
-## Mission
+1. Naming
 
-D.AI.SY exists to help people become more capable—not more dependent.
+Use D.AI.SY consistently as the official submission-facing product name. Do not convert it to D.A.I.S.Y.
 
-Rather than replacing human thinking, D.AI.SY is being designed to improve cognitive accessibility, increase decision confidence, and strengthen long-term personal agency.
+2. Current Status
 
-The platform guides users through a progression of:
+Preserve existing supported capabilities, but add the production-verified Collaborative Partner behavior:
 
-> **Confusion → Clarity → Action → Confidence → Agency**
+human-decision clarification before planning when consequential human judgment is required
+distinction between consequential human preferences and evidence-resolvable uncertainty
+adaptive planning after human clarification
+stateless, signed, time-limited clarification context
+claim/evidence boundaries in reasoning
 
----
+Replace the old submission-level flow:
 
-# Vision
+Goal → Plan → Execute → Observe → Decide → Bounded Continuation
 
-Artificial Intelligence should augment human intelligence—not replace it.
+with:
 
-D.AI.SY combines modern large language models, persistent memory, structured reasoning, and multi-agent collaboration into an adaptive system that helps people organize thoughts, make better decisions, and continue growing over time.
+Goal → Human-Decision Boundary → Clarify When Needed → Human Direction → Adaptive Plan → Execute → Observe → Decide → Bounded Continuation
 
----
+Explain immediately afterward that evidence-resolvable uncertainty is handled through discovery, research, comparison, or validation inside the plan rather than unnecessarily requiring a human decision.
 
-# Current Status
+3. Agentic Execution
 
-**Version:** 0.1.0
+Add concise bullets for:
 
-**Development Status:** Active — Competition Deployment Operational
+ClarificationService
+human-decision boundary
+discovery-in-plan behavior
+adaptive planner handoff after clarification
+signed clarification context
+claim boundary separating hypothetical product capabilities from D.AI.SY capabilities
+evidence boundary for unsupported external factual assertions
 
-D.AI.SY is deployed on Google Cloud Run with a working agentic execution pipeline.
+Preserve the existing PlannerAgent, ExecutionAgent, WorkflowEngine, TaskObservation, TaskDecision, DecisionPolicy, capability routing, authority boundary, and bounded-continuation descriptions.
 
-The current implementation supports:
+Do not imply D.AI.SY autonomously completes an entire project. Automatic continuation is limited to one additional reasoning task, subject to system boundaries.
 
-- Goal-to-project planning
-- Google Gemini-powered reasoning
-- Google Agent Development Kit (ADK) task execution
-- Capability-based task orchestration
-- Task observation and decision evaluation
-- Bounded autonomous continuation
-- Human authority boundaries for external real-world actions
-- CALL-E integration with real calls disabled by default
-- Interactive Swagger/OpenAPI testing
+4. AI and Google Integration Example
 
-The current competition deployment demonstrates the core agentic loop:
+Replace the existing generic example with a short Collaborative Partner example:
 
-> **Goal → Plan → Execute → Observe → Decide → Bounded Continuation**
+User has a meaningful priority conflict between reaching a revenue test quickly and deeply understanding the customer problem first.
 
-Deployment proof, evidence, and the final demo workflow are tracked in:
+D.AI.SY asks which priority should govern the plan rather than silently choosing.
 
-- [Live Agentic Proof](docs/submission/LIVE_AGENTIC_PROOF.md)
-- [Submission Evidence Index](docs/submission/SUBMISSION_EVIDENCE_INDEX.md)
-- [All Things Agentic Demo Runbook](docs/submission/ALL_THINGS_AGENTIC_DEMO_RUNBOOK.md)
+Human chooses customer understanding and says they do not want to build yet.
 
----
+D.AI.SY then creates a discovery-oriented plan reflecting that direction.
 
-# Implemented Features
+Keep this concise and clearly illustrative.
 
-## Backend
+5. Security
 
-- FastAPI backend
-- REST API architecture
-- Request/Response validation using Pydantic
-- Modular service architecture
-- Cloud Run-compatible container packaging
-- Environment variable configuration
-- Secure API key management
-- Swagger/OpenAPI documentation
-- Health monitoring endpoint
+Preserve existing security claims and add that clarification context is:
 
----
+stateless
+time-limited
+integrity-protected using HMAC signing
+backed by a dedicated signing secret supplied through Google Secret Manager in production
+rejected when malformed, tampered with, or expired
 
-## Agentic Execution
+Do not expose secret values, tokens, credentials, internal security material, or unnecessary operational detail.
 
-- Agent registry and routing
-- PlannerAgent for goal-to-project task planning
-- ExecutionAgent for task execution requests
-- WorkflowEngine for task lifecycle management
-- CapabilityRegistry for executor selection
-- TaskObservation output after execution
-- TaskDecision for post-execution policy decisions
-- DecisionPolicy for next-step evaluation
-- Bounded autonomous continuation for safe reasoning tasks
-- Human authority boundary for external actions
+6. Completed Milestones
 
----
+Add completed milestones for:
 
-## AI and Google Integration
+human-decision clarification boundary
+discovery-vs-human-judgment behavior
+adaptive planning after clarification
+stateless clarification context
+claim boundary
+evidence boundary
+production verification of Collaborative Partner behavior
+7. Guiding Principles
 
-- Google Gemini 3.5 Flash Lite-powered planning and reasoning
-- Google GenAI SDK integration
-- Google ADK-backed reasoning executor
-- Service abstraction layer around model access
-- Verified prompt/response pipeline
-- Google Cloud Run deployment
-- Secret Manager-based Gemini credential configuration in deployment
+Preserve the existing principles and wording wherever possible. Make the implementation connection clearer:
 
-Example:
+Human Agency First → consequential human preferences remain with the human
+Human Decision Authority → D.AI.SY clarifies rather than silently selecting a governing priority
+Evidence Over Assumption → unsupported external claims are framed as assumptions, hypotheses, estimates, illustrative examples, or items requiring validation
+8. Project Status
 
-```
-User:
-Plan a reasoning-only D.AI.SY demo that helps a user clarify a vague product idea.
-
-D.AI.SY:
-Creates a structured project with reasoning tasks, executes the first task, observes the result, evaluates the decision, and applies one bounded continuation.
-```
-
----
-
-## CALL-E Integration
-
-- CALL-E task executor implemented
-- Phone-call capability routed through explicit task capability metadata
-- Real calls disabled by default through `DAISY_ENABLE_REAL_CALLS=0`
-- Destination authority boundaries for external phone actions
-- Code and test coverage for CALL-E safety behavior
+Update the implemented-capability summary to include the Collaborative Partner behavior now verified in production.
 
----
+9. Reproducible Testing
 
-## API Endpoints
+Substantially revise this section.
 
-Implemented:
+The primary walkthrough should demonstrate:
 
-| Endpoint | Method | Purpose |
-|-----------|----------|-----------------------------|
-| / | GET | API Status |
-| /health | GET | Health Check |
-| /chat | POST | Conversation, planning, and execution routing |
+Step 1 — Human priority conflict
 
----
+Submit a planning request in which the user wants help validating an affordable AI service for small local businesses that miss customer calls but is torn between getting to a revenue test quickly and spending more time deeply understanding the customer problem first.
 
-## Security
+Expected:
 
-Implemented:
+agent = clarification
+status = needs_clarification
+exactly one clarification question
+clarification_token
+expires_at
+no project yet
 
-- Environment-based secrets
-- `.env` excluded from Git
-- `.env.example` included
-- Repository history cleaned to remove exposed API key
-- GitHub Push Protection resolved
-- API key regenerated
-- Runtime Gemini credentials supplied through Google Secret Manager
-- External real-world actions gated behind explicit safety controls
+Step 2 — Human direction
 
----
+Submit the clarification answer with the returned clarification_token, expressing that understanding the customer problem matters more and that the user does not want to build yet.
 
-# Repository Structure
+Expected:
 
-```
-backend/
-│
-├── app/
-│   ├── agents/
-│   ├── api/
-│   ├── config/
-│   ├── firestore/
-│   ├── knowledge/
-│   ├── memory/
-│   ├── models/
-│   ├── orchestration/
-│   ├── prompts/
-│   ├── schemas/
-│   ├── services/
-│   └── main.py
-│
-├── tests/
-├── Dockerfile
-├── requirements.txt
-├── .env.example
-└── .env (local only)
+planner runs only after the answer
+project is created
+plan adapts toward customer discovery
 
-docs/
-│
-├── architecture/
-├── product/
-├── submission/
-├── ui/
-├── ARCHITECTURE.md
-└── PRODUCT.md
-```
+Representative production-verified task types included customer interview targeting, interview-guide creation, qualitative interviews, and discovery synthesis. Do not guarantee exact generated task wording.
 
----
+Step 3 — Execute
 
-# Technology Stack
+Submit {"message":"execute"} after planning.
 
-## Backend
+Expected response should demonstrate:
 
-- Python 3.12 container runtime
-- FastAPI
-- Uvicorn
-- Pydantic
-- python-dotenv
+execution
+observation
+decision
+continuation evaluation
 
-## AI and Agent Execution
+Explain that automatic continuation is limited to one additional reasoning task and that non-reasoning/authority-requiring work is not automatically executed merely because a decision says continue.
 
-- Google Gemini 3.5 Flash Lite
-- Google GenAI SDK
-- Google Agent Development Kit (ADK)
+Include a short secondary note that uncertainty that can be resolved through evidence—such as determining which customer segment has the largest problem—can proceed directly into planning/discovery without unnecessary clarification.
 
-## Deployment
+10. Gemini model claim
 
-- Google Cloud Run
-- Google Secret Manager
-- Docker
+Before retaining the exact phrase “Google Gemini 3.5 Flash Lite”, inspect the current source-code default actually used when GEMINI_MODEL is absent.
 
-## Development
+If the repository unambiguously supports the exact model name, retain/correct the wording to match the source.
+If the exact deployed model cannot be established from the repository, replace the overly specific claim with Google Gemini rather than guessing.
+Do not change application configuration or code.
+11. Preserve roadmap boundaries
 
-- Git
-- GitHub
-- Swagger/OpenAPI
+Persistent memory, Firestore-backed continuity, full web UI, authentication, dashboard, and Growth Passport remain planned/future work unless the repository explicitly proves otherwise. Do not promote them to implemented capabilities.
 
----
+12. Cleanup
 
-# Successfully Completed During This Development Phase
+If literal [svg](...) artifacts actually exist in the source README and serve no intentional purpose, remove them. If they were only artifacts of copied GitHub-rendered content, make no change for this item.
 
-✅ Initialized backend architecture
+Required output
 
-✅ Established modular package structure
+After editing, stop before commit and report:
 
-✅ Created FastAPI application
-
-✅ Added health endpoint
-
-✅ Added root endpoint
-
-✅ Created request/response schemas
-
-✅ Built chat service abstraction
-
-✅ Connected Google Gemini API
-
-✅ Verified live inference
-
-✅ Generated interactive Swagger documentation
-
-✅ Implemented secure environment variable loading
-
-✅ Removed exposed API key from repository history
-
-✅ Configured Git ignore rules
-
-✅ Regenerated API credentials
-
-✅ Successfully pushed cleaned repository to GitHub
-
-✅ Added multi-agent routing
-
-✅ Added goal-to-project planning
-
-✅ Added task capability metadata
-
-✅ Added workflow execution lifecycle
-
-✅ Added Google ADK reasoning executor
-
-✅ Added guarded CALL-E executor
-
-✅ Added task observation and decision evaluation
-
-✅ Added bounded autonomous continuation
-
-✅ Packaged backend for Cloud Run
-
-✅ Verified live Cloud Run competition deployment
-
----
-
-# Documentation
-
-## Architecture
-
-- System Overview
-- API Contracts
-- ADK Orchestration
-- Firestore Data Model
-- Context Packet
-
-## Product
-
-- Vision
-- Product Overview
-- Competition Demonstration
-
-## Submission
-
-- Live Agentic Proof
-- Submission Evidence Index
-- All Things Agentic Demo Runbook
-
-## UI
-
-- Conversation Workspace
-
----
-
-# Current Development Roadmap
-
-## Phase 1 — Foundation ✅
-
-- Backend
-- Gemini
-- API
-- Documentation
-- Secure configuration
-
-Status:
-**Complete**
-
----
-
-## Phase 2 — Agentic Planning and Execution
-
-- Agent registry
-- PlannerAgent
-- ExecutionAgent
-- Google ADK integration
-- Capability-based orchestration
-- WorkflowEngine
-- Capability registry
-- Observation and decision evaluation
-- TaskObservation
-- TaskDecision
-- Bounded continuation
-- Human authority boundary
-- CALL-E task executor with safe-call controls
-
-Status:
-**Core agent framework operational**
-
----
-
-## Phase 3 — Competition Deployment
-
-- Cloud Run deployment
-- Gemini credential configuration through Secret Manager
-- Live planning proof
-- Live execution proof
-- Demo runbook
-- Submission evidence index
-
-Status:
-**Operational**
-
----
-
-## Phase 4 — Persistent Memory
-
-Planned:
-
-- Firestore integration
-- Conversation history
-- Project persistence
-- Execution history
-- Growth Passport storage
-
----
-
-## Phase 5 — Product Experience
-
-Planned:
-
-- Web interface
-- Authentication
-- Dashboard
-- Growth Passport visualization
-- Workspace continuity
-
----
-
-# Guiding Principles
-
-D.AI.SY is developed according to several core principles:
-
-### Human Agency First
-
-AI should strengthen independent thinking rather than replace it.
-
----
-
-### Human Decision Authority
-
-Final decisions always belong to the user.
-
-AI assists.
-
-Humans decide.
-
----
-
-### Documentation-Driven Development
-
-Architecture decisions are documented alongside implementation.
-
----
-
-### Modular Architecture
-
-Components should be replaceable, testable, and independently maintainable.
-
----
-
-### Security by Default
-
-Secrets are never committed to source control.
-
-Configuration remains environment-based.
-
----
-
-### Evidence Over Assumption
-
-Features are only documented as complete after successful implementation and verification.
-
----
-
-# Next Immediate Milestones
-
-- Preserve final competition demo evidence
-- Capture final video and screenshots
-- Run a fresh final backend test pass before submission packaging
-- Continue Firestore-backed persistent memory
-- Build the user-facing conversation workspace
-- Expand agent capabilities
-
----
-
-# Project Status
-
-D.AI.SY has successfully transitioned from concept to a deployed agentic AI backend.
-
-The project now possesses:
-
-- Working backend
-- Live Gemini integration
-- Modular agent architecture
-- Capability-based execution
-- Structured task observation
-- Decision evaluation
-- Bounded autonomous continuation
-- Secure Cloud Run deployment
-- Competition evidence framework
-
-The next development milestone focuses on final submission artifact capture and persistent memory.
-
----
-
-*"Helping people become more capable—not more dependent."*
-## Reproducible Testing
-
-### Live hosted demo
-
-D.A.I.S.Y. is deployed on Google Cloud Run.
-
-Swagger interface:
-[https://daisy-backend-pbhnglpapq-ue.a.run.app/docs](https://daisy-backend-pbhnglpapq-ue.a.run.app/docs)
-
-1. Open the Swagger interface.
-2. Expand `POST /chat`.
-3. Click **Try it out**.
-4. Submit:
-
-{
-  "message": "Plan a project to help me decide how to validate an affordable AI service for small local businesses that miss customer calls. I don't know who my first customer should be or what I should validate first. Break this goal into safe reasoning tasks that lead to one clear next step."
-}
-
-5. Confirm the response contains a structured project plan and tasks.
-6. Submit:
-
-{
-  "message": "execute"
-}
-
-7. Confirm the execution response contains task execution evidence,
-   `observation`, `decision`, and `continuation`.
-
-Health endpoint:
-https://daisy-backend-pbhnglpapq-ue.a.run.app/health
-
-The competition deployment uses Google Cloud Run, the Google GenAI SDK,
-and Google Agent Development Kit (ADK).
-
-Real-world CALL-E phone actions are disabled in the competition deployment
-unless explicitly authorized.
+exact file modified
+concise section-by-section change summary
+exact Gemini model source/default found and resulting README wording
+confirmation that D.AI.SY naming is consistent
+confirmation that no backend/code/config/deployment files changed
+git diff --check result
+git diff --stat
+git status --short
+any remaining unsupported, ambiguous, or potentially misleading submission claim
+recommendation: GO / MODIFY / BLOCK for README acceptance
