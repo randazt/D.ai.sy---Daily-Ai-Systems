@@ -1,5 +1,6 @@
 import os
 import traceback
+from typing import Any
 
 from dotenv import load_dotenv
 from google import genai
@@ -12,11 +13,17 @@ client = genai.Client(
 
 
 class GeminiService:
-    def generate(self, message: str):
+    def generate(self, message: str, config: Any = None):
         try:
+            request = {
+                "model": "gemini-3.5-flash-lite",
+                "contents": message,
+            }
+            if config is not None:
+                request["config"] = config
+
             response = client.models.generate_content(
-                model="gemini-3.5-flash-lite",
-                contents=message,
+                **request,
             )
 
             return {

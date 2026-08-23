@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class ChatRequest(BaseModel):
     message: str
+    clarification_token: Optional[str] = None
 
 
 class ChatResponse(BaseModel):
@@ -65,6 +66,15 @@ class AgentStatusMessageResponse(BaseModel):
     agent: Literal["planner", "execution"]
     status: str
     message: str
+
+
+class ClarificationResponse(BaseModel):
+    agent: Literal["clarification"]
+    status: Literal["needs_clarification", "invalid_context"]
+    question: Optional[str] = None
+    clarification_token: Optional[str] = None
+    expires_at: Optional[str] = None
+    message: Optional[str] = None
 
 
 class ExecutionProjectSchema(BaseModel):
@@ -145,5 +155,6 @@ ChatEndpointResponse = Union[
     PlannerResponse,
     ExecutionResponse,
     AgentStatusMessageResponse,
+    ClarificationResponse,
     ConversationResponse,
 ]

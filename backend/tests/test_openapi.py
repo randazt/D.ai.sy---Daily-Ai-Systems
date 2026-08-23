@@ -7,6 +7,7 @@ PUBLIC_RESPONSE_VARIANTS = {
     "PlannerResponse",
     "ExecutionResponse",
     "AgentStatusMessageResponse",
+    "ClarificationResponse",
     "ConversationResponse",
 }
 SUPPORTED_OUTCOMES = {
@@ -205,6 +206,19 @@ class OpenAPIDocumentationTests(unittest.TestCase):
             "#/components/schemas/TaskDecisionSchema",
         )
 
+    def test_clarification_response_exposes_public_fields(self):
+        properties = self.schemas["ClarificationResponse"]["properties"]
+        expected = {
+            "agent",
+            "status",
+            "question",
+            "clarification_token",
+            "expires_at",
+            "message",
+        }
+
+        self.assertEqual(set(properties), expected)
+
     def test_task_inputs_are_provider_neutral_objects(self):
         for schema_name in ("PlannerTaskSchema", "ExecutionCurrentTaskSchema"):
             with self.subTest(schema=schema_name):
@@ -253,7 +267,9 @@ class OpenAPIDocumentationTests(unittest.TestCase):
     def test_chat_request_still_requires_message(self):
         request_schema = self.schemas["ChatRequest"]
         self.assertEqual(request_schema["properties"]["message"]["type"], "string")
+        self.assertIn("clarification_token", request_schema["properties"])
         self.assertIn("message", request_schema["required"])
+        self.assertNotIn("clarification_token", request_schema["required"])
 
         request_body = self.chat_post["requestBody"]
         request_ref = request_body["content"]["application/json"]["schema"]["$ref"]
