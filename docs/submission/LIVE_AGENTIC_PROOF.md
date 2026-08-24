@@ -1,74 +1,208 @@
-# D.AI.S.Y. Live Agentic Proof
+# D.AI.SY Live Collaborative Partner Proof
 
-This file captures the first successful live Cloud Run validation of the deployed D.AI.S.Y. backend for the All Things Agentic submission.
+This file records the production-accepted Collaborative Partner behavior of the deployed D.AI.SY backend for the All Things Agentic submission.
 
-## Deployment
+It supersedes the earlier reasoning-only agentic proof. The current proof focuses on the verified flow:
+
+> **Goal -> Human-Decision Boundary -> Clarify When Needed -> Human Direction -> Adaptive Plan -> Execute -> Observe -> Decide -> Bounded Continuation**
+
+## Production Deployment
 
 - Cloud Run service URL: https://daisy-backend-pbhnglpapq-ue.a.run.app
-- Revision: `daisy-backend-00001-k9g`
-- Build: `4b3e97f6-baa6-43cb-ae9e-e47b503e3e98`
+- Current proof revision: `daisy-backend-00002-mdt`
 - Region: `us-east1`
 - Runtime identity: `daisy-runtime@daisy-agentic-2026.iam.gserviceaccount.com`
-- Gemini credential source: Secret Manager secret `daisy-gemini-api-key:1`
-- Secret value: never retrieved, printed, or included in this evidence
-- `DAISY_ENABLE_REAL_CALLS`: `0`
+- Gemini credential reference: `GEMINI_API_KEY -> daisy-gemini-api-key:1`
+- Clarification signing-secret reference: `DAISY_CLARIFICATION_TOKEN_SECRET -> daisy-clarification-token-secret:1`
+- Secret values: never retrieved, printed, or included in this evidence
+- Clarification token values: never printed or reproduced in this evidence
 
-## Live Proof Sequence
+## Production Health
 
-### Planning Request
+The deployed service was verified healthy on the production revision.
+
+- `GET /health` returned HTTP `200`
+- Response status was `healthy`
+
+## Primary Collaborative Partner Flow
+
+### 1. Human-Decision Boundary
+
+The accepted walkthrough used a planning request where the human had a meaningful unresolved priority conflict:
 
 ```json
-{"message":"Plan a reasoning-only D.A.I.S.Y. demo that helps a user clarify a vague product idea into one clear next step. Use only reasoning tasks. Avoid phone calls, internet research, file generation, email, purchases, credentials, or external real-world activity."}
+{
+  "message": "I'm trying to validate an affordable AI service for small local businesses that miss customer calls. I'm torn between getting to a revenue test as quickly as possible and spending more time deeply understanding the customer problem first. Help me build the right plan."
+}
 ```
 
-### Returned Reasoning Tasks
+Observed production behavior:
 
-1. Analyze the Vague Product Idea
-2. Deconstruct Value Proposition
-3. Synthesize Constraints and Feasibility
-4. Formulate Candidate Next Steps
-5. Select the Single Clear Next Step
+- D.AI.SY did not choose the governing priority for the human.
+- Response returned `agent=clarification`.
+- Response returned `status=needs_clarification`.
+- Exactly one clarification question was asked.
+- `clarification_token` was present. The token value is intentionally omitted.
+- `expires_at` was present.
+- No project was created before the required human clarification was answered.
 
-All returned tasks used capability `reasoning`.
+Exact clarification question observed:
 
-### Execution Request
+> Would you prefer to prioritize launching a rapid revenue test immediately, or spend more time upfront conducting customer discovery to deeply validate the problem?
+
+### 2. Human Direction
+
+The human then supplied the governing priority using the returned clarification context:
+
+```json
+{
+  "message": "Understanding the customer problem matters more. I don't want to build anything yet.",
+  "clarification_token": "<returned clarification_token omitted>"
+}
+```
+
+Observed production behavior:
+
+- The clarification answer reached the planner.
+- A project was created only after the human answer.
+- The original goal and human answer were incorporated into adaptive planning.
+- The resulting plan prioritized customer understanding and avoided premature building.
+
+Representative production-verified task types included:
+
+- customer interview targeting
+- interview-guide creation
+- qualitative interviews
+- discovery synthesis
+
+Exact generated task wording may vary because it is model-generated. The invariant behavior is that planning adapts to the human's stated priority before execution.
+
+### 3. Discovery Boundary
+
+D.AI.SY also verified the difference between a human-value conflict and evidence-resolvable uncertainty.
+
+When the user asked D.AI.SY to compare likely customer segments and determine which segment should be validated first, the request proceeded directly to planning. D.AI.SY did not force unnecessary human clarification for an uncertainty that could be handled through discovery, research, comparison, or validation inside the plan.
+
+Similarly, uncertainty about whether an idea was worth pursuing became validation planning work rather than a clarification requirement.
+
+## Claim and Evidence Boundaries
+
+Production reasoning output was reviewed for the accepted demo scenario.
+
+Verified behavior:
+
+- Proposed AI call-handling service capabilities remained separate from implemented D.AI.SY capabilities.
+- D.AI.SY did not claim that it currently provides the proposed service's phone reception, CRM integration, 24/7 calling, pricing, performance, or business outcomes.
+- Unsupported external market or business assertions were not presented as externally verified facts.
+- Unknowns were framed as hypotheses, assumptions, estimates, examples, research questions, comparisons, or validation targets where appropriate.
+- No fabricated citations or implied external verification were observed in the reviewed production output.
+
+## Execution, Observation, Decision, and Continuation
+
+After adaptive planning, the accepted walkthrough submitted:
 
 ```json
 {"message":"execute"}
 ```
 
-## Verified Behavior
+Observed production behavior:
 
-- First reasoning task completed.
+- Response returned `agent=execution`.
+- A current task was selected.
+- Execution evidence was returned.
+- A structured observation was returned.
+- A decision was returned.
+- A continuation evaluation was returned.
+
+Observed selected task:
+
+- Task: `Define Customer Interview Target Profile`
+- Capability: `reasoning`
+- Execution success: `true`
+- Observation outcome: `completed`
+- Decision: `continue`
+
+The decision `continue` is a decision-policy result, not unrestricted authorization to execute any next task.
+
+In the accepted production run, the next pending task was `document_generation`, so automatic continuation was not applied. The system returned the bounded-continuation reason:
+
+> Automatic continuation is limited to reasoning tasks.
+
+This confirms that non-reasoning work remains pending rather than being automatically executed merely because a decision says `continue`. Authority-requiring or external real-world actions remain separately gated and cannot bypass continuation or authority boundaries.
+
+## Clarification Context Safety
+
+Clarification context was verified as stateless, signed, and time-limited in production behavior.
+
+Observed safety behavior:
+
+- Invalid or tampered clarification context returned `agent=clarification` and `status=invalid_context`.
+- An execution command submitted with active clarification context returned `agent=clarification` and `status=invalid_context`.
+- The execution command did not bypass clarification.
+- Tampered context did not reach the planner.
+- Tampered context did not reach execution.
+- Abandoned clarification context did not leak into a later independent request.
+
+Token values are not included in this evidence. Only token presence and failure behavior were verified and recorded.
+
+## CALL-E and External Authority Boundary
+
+CALL-E real-world actions were not invoked during the Collaborative Partner production proof.
+
+Verified boundary:
+
+- Pending `phone_call` tasks may appear in plans as future work, but they were not executed during this proof.
+- Non-reasoning and authority-requiring actions remain pending unless explicitly authorized through their own boundary.
+- Real-world phone actions remain separately authority-gated.
+
+## Log Hygiene
+
+Recent production logs for the acceptance test were inspected without printing message bodies, token values, or secret values.
+
+Observed:
+
+- No secret payloads were observed in the inspected logs.
+- No clarification-token values were observed in the inspected logs.
+- No Gemini API key value was observed in the inspected logs.
+- No signing-secret value was observed in the inspected logs.
+- No unexpected exceptions were observed in the inspected logs.
+
+Known issue:
+
+- Ordinary user-message logging markers are present. This should not be presented as ideal production logging, and final video capture should avoid reproducing message bodies from logs.
+
+## Secondary Reasoning-Only Continuation Evidence
+
+Earlier validation also demonstrated the reasoning-only continuation path:
+
+- A first reasoning task completed.
 - `TaskObservation.outcome` was `completed`.
 - `TaskDecision.decision` was `continue`.
-- Bounded continuation was applied.
-- Exactly one additional reasoning task executed.
-- Second task completed.
-- Second decision was `continue`.
-- The second `continue` was not recursively applied.
-- CALL-E was not invoked.
-- No phone call occurred.
+- Exactly one additional reasoning task executed automatically when the next task was eligible reasoning.
+- A second `continue` decision could be exposed, but recursive automatic continuation did not occur.
 
-## Google Evidence
+This is supporting evidence only. The primary current proof is the production Collaborative Partner flow on revision `daisy-backend-00002-mdt`.
 
-- Live planner logs showed Google GenAI runtime activity through `Models.generate_content`.
-- Live execution logs showed Google GenAI runtime activity through `AsyncModels.generate_content`.
-- The deployed reasoning path therefore exercised the Google GenAI runtime and the existing Google ADK reasoning execution path used by D.A.I.S.Y.'s `AdkTaskExecutor`.
+## What This Proof Establishes
 
-## Safety Evidence
+D.AI.SY's production behavior now demonstrates:
 
-- `phone_call` was not part of this workflow.
-- `DAISY_ENABLE_REAL_CALLS` remained `0`.
-- Bounded continuation advanced only into a `reasoning` task.
-- No unbounded loop occurred.
-- No CALL-E execution was invoked.
-- No real phone call occurred.
+- Human-priority conflicts are clarified before planning.
+- Required clarification asks one focused question.
+- No project is created before required clarification is answered.
+- Human direction is incorporated into adaptive planning.
+- Evidence-resolvable uncertainty proceeds into discovery, research, comparison, or validation.
+- Hypothetical product capabilities are not attributed to D.AI.SY as implemented capabilities.
+- Unsupported external assertions are framed as hypotheses, assumptions, estimates, examples, or validation targets.
+- Execution produces execution evidence, observation, decision, and continuation evaluation.
+- `decision=continue` does not authorize unrestricted execution.
+- Automatic continuation is bounded to eligible reasoning work.
+- Non-reasoning and authority-requiring actions remain pending.
+- Invalid, tampered, expired, or execution-like clarification context fails closed.
+- Production health and Collaborative Partner behavior were verified on the deployed revision.
 
-## Exact Public ExecutionResponse
+## Facts Still To Verify Before Final Submission Packaging
 
-HTTP status: `200`
-
-```json
-{"agent":"execution","status":"completed","project":{"title":"Plan a reasoning-only D.A.I.S.Y. demo that helps a user clarify a vague product idea into one clear next step. Use only reasoning tasks. Avoid phone calls, internet research, file generation, email, purchases, credentials, or external real-world activity.","description":"","status":"active"},"current_task":{"title":"Analyze the Vague Product Idea","description":"Examine the initial user input to identify core themes, underlying assumptions, and potential target audiences.","capability":"reasoning","status":"completed","output":"**Task Execution Result: Analyze the Vague Product Idea**\n\n* **Core Themes:** Identified primary product concepts, value propositions, and functional domains from the initial input.\n* **Underlying Assumptions:** Extracted key hypotheses regarding user behavior, market demand, and technical feasibility that require validation.\n* **Potential Target Audiences:** Segmented primary and secondary user groups based on inferred use cases and pain points.\n\n*Status: Complete. Ready for downstream refinement and requirements generation.*"},"execution":{"success":true,"output":"**Task Execution Result: Analyze the Vague Product Idea**\n\n* **Core Themes:** Identified primary product concepts, value propositions, and functional domains from the initial input.\n* **Underlying Assumptions:** Extracted key hypotheses regarding user behavior, market demand, and technical feasibility that require validation.\n* **Potential Target Audiences:** Segmented primary and secondary user groups based on inferred use cases and pain points.\n\n*Status: Complete. Ready for downstream refinement and requirements generation.*","error":""},"decision":{"decision":"continue","reason":"Task completed and remaining work is available."},"observation":{"task_title":"Analyze the Vague Product Idea","capability":"reasoning","status":"completed","success":true,"outcome":"completed","summary":"**Task Execution Result: Analyze the Vague Product Idea**\n\n* **Core Themes:** Identified primary product concepts, value propositions, and functional domains from the initial input.\n* **Underlying Assumptions:** Extracted key hypotheses regarding user behavior, market demand, and technical feasibility that require validation.\n* **Potential Target Audiences:** Segmented primary and secondary user groups based on inferred use cases and pain points.\n\n*Status: Complete. Ready for downstream refinement and requirements generation.*","error":""},"continuation":{"continue_applied":true,"continue_skipped_reason":"","continued_task":{"title":"Deconstruct Value Proposition","description":"Evaluate the unique value proposition and brainstorm how the idea differentiates from existing alternatives using logical deduction.","capability":"reasoning","status":"completed","output":"**Execution Result: Deconstruct Value Proposition**\n\n1. **Core Value Proposition Identification:**\n   - D.A.I.S.Y. delivers decentralized, atomic, intelligent synthesis for specialized agentic execution. Its core value lies in autonomous, modular task decomposition and deterministic feedback loops.\n\n2. **Differentiation via Logical Deduction:**\n   - *Premise 1:* Traditional workflow automation tools require rigid, pre-defined orchestration graphs.\n   - *Premise 2:* Standard generative AI wrappers suffer from high variance, lack of state isolation, and poor error-correction capabilities.\n   - *Deduction:* D.A.I.S.Y. differentiates by combining the systemic reliability of programmatic execution pipelines with the dynamic adaptability of localized reasoning agents, ensuring zero state corruption and minimal human-in-the-loop intervention.\n\n3. **Actionable Advantage:**\n   - Position the system not as a general-purpose chatbot, but as an *executable runtime environment* for complex, multi-step cognitive and computational operations."},"continued_execution":{"success":true,"output":"**Execution Result: Deconstruct Value Proposition**\n\n1. **Core Value Proposition Identification:**\n   - D.A.I.S.Y. delivers decentralized, atomic, intelligent synthesis for specialized agentic execution. Its core value lies in autonomous, modular task decomposition and deterministic feedback loops.\n\n2. **Differentiation via Logical Deduction:**\n   - *Premise 1:* Traditional workflow automation tools require rigid, pre-defined orchestration graphs.\n   - *Premise 2:* Standard generative AI wrappers suffer from high variance, lack of state isolation, and poor error-correction capabilities.\n   - *Deduction:* D.A.I.S.Y. differentiates by combining the systemic reliability of programmatic execution pipelines with the dynamic adaptability of localized reasoning agents, ensuring zero state corruption and minimal human-in-the-loop intervention.\n\n3. **Actionable Advantage:**\n   - Position the system not as a general-purpose chatbot, but as an *executable runtime environment* for complex, multi-step cognitive and computational operations.","error":""},"continued_observation":{"task_title":"Deconstruct Value Proposition","capability":"reasoning","status":"completed","success":true,"outcome":"completed","summary":"**Execution Result: Deconstruct Value Proposition**\n\n1. **Core Value Proposition Identification:**\n   - D.A.I.S.Y. delivers decentralized, atomic, intelligent synthesis for specialized agentic execution. Its core value lies in autonomous, modular task decomposition and deterministic feedback loops.\n\n2. **Differentiation via Logical Deduction:**\n   - *Premise 1:* Traditional workflow automation tools require rigid, pre-defined orchestration graphs.\n   - *Premise 2:* Standard generative AI wrappers suffer from high variance, lack of state isolation, and poor error-correction capabilities.\n   - *Deduction:* D.A.I.S.Y. differentiates by combining the systemic reliability of programmatic execution pipelines with the dynamic adaptability of localized reasoning agents, ensuring zero state corruption and minimal human-in-the-loop intervention.\n\n3. **Actionable Advantage:**\n   - Position the system not as a general-purpose chatbot, but as an *executable runtime environment* for complex, multi-step cognitive and computational operations.","error":""},"continued_decision":{"decision":"continue","reason":"Task completed and remaining work is available."}}}
-```
+- Final repository SHA for the submitted documentation package.
+- Final video and screenshot artifact locations.
+- Any official form-specific wording or upload requirements.

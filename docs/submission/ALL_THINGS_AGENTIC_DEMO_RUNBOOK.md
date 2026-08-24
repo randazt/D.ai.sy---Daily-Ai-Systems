@@ -1,328 +1,285 @@
-# D.AI.S.Y. All Things Agentic Demo Runbook
+# D.AI.SY All Things Agentic Demo Runbook
 
 Target category: Taskmaster
 
-Purpose: produce a reproducible final competition video under four minutes using the currently deployed D.AI.S.Y. backend. This runbook does not require code changes, redeployment, UI work, persistence, CALL-E activation, or a real phone call.
+Purpose: guide a final competition walkthrough using the production-verified D.AI.SY Collaborative Partner behavior. This runbook does not require code changes, redeployment, configuration changes, secret access, CALL-E activation, or a real phone call.
 
 Live service: https://daisy-backend-pbhnglpapq-ue.a.run.app
 
-Approved deployed revision: `daisy-backend-00001-k9g`
+Current production revision: `daisy-backend-00002-mdt`
 
-## 1. Video Structure
-
-Target duration: 3:35. Hard limit: 4:00.
-
-| Time | Segment | Purpose |
-|---|---|---|
-| 0:00-0:25 | Opening problem and value proposition | State that D.A.I.S.Y. turns vague goals into structured, executable progress while preserving human authority. |
-| 0:25-0:55 | Architecture and Google technology | Explain FastAPI `/chat`, PlannerAgent, ExecutionAgent, Gemini, Google ADK, WorkflowEngine, TaskObservation, DecisionPolicy, and bounded continuation. |
-| 0:55-2:35 | Live application demonstration | Show live Cloud Run URL, send planning request, verify reasoning tasks, send execution request, verify execution, observation, decision, and continuation. |
-| 2:35-3:15 | Autonomous-control and safety | Show that continuation is bounded, only reasoning auto-continues, `DAISY_ENABLE_REAL_CALLS=0`, and phone action remains behind authority. |
-| 3:15-3:35 | Closing impact statement | Tie the demo to Taskmaster: decomposition, execution, observation, decision, bounded action, and human authority. |
-
-## 2. Exact Live Demo Sequence
-
-Use the deployed `/chat` endpoint only:
+Primary flow:
 
 ```text
-POST https://daisy-backend-pbhnglpapq-ue.a.run.app/chat
-Content-Type: application/json
+Goal -> Human-Decision Boundary -> Clarify When Needed -> Human Direction -> Adaptive Plan -> Execute -> Observe -> Decide -> Bounded Continuation
 ```
 
-Important routing note: the first planning prompt must avoid words that route directly to the ExecutionAgent, including `run`, `execute`, `start`, `launch`, `deploy`, `complete`, and `finish`.
+Core narration:
 
-### Request 1: Planning
+> AI assists. Humans decide.
+
+D.AI.SY distinguishes among:
+
+- consequential human judgment -> clarify
+- evidence-resolvable uncertainty -> discover in the plan
+- eligible bounded reasoning -> may continue automatically once
+- external or authority-requiring action -> remains separately gated
+
+## 1. Establish Live Deployment
+
+Use the deployed public service. Start with a quick health check:
+
+```text
+GET https://daisy-backend-pbhnglpapq-ue.a.run.app/health
+```
+
+Expected:
+
+- HTTP `200`
+- `status=healthy`
+
+Do not show Cloud Console details, credentials, billing information, Secret Manager payloads, or secret values. The Cloud Run URL and health response are enough to establish the live deployment for the primary walkthrough.
+
+## 2. Demonstrate the Human-Decision Boundary
+
+Use `POST /chat`.
+
+Primary prompt:
 
 ```json
-{"message":"Plan a reasoning-only D.A.I.S.Y. demo that helps a user clarify a vague product idea into one clear next step. Use only reasoning tasks. Avoid phone calls, internet research, file generation, email, purchases, credentials, or external real-world activity."}
+{
+  "message": "I'm trying to validate an affordable AI service for small local businesses that miss customer calls. I'm torn between getting to a revenue test as quickly as possible and spending more time deeply understanding the customer problem first. Help me build the right plan."
+}
 ```
 
-Expected planning result:
+Expected response:
 
-- HTTP status `200`
-- Response variant: `PlannerResponse`
-- `agent` is `planner`
-- `project.status` is `active`
-- Planned tasks are reasoning-only
-- No `phone_call` task appears
-- No CALL-E action appears
+- `agent=clarification`
+- `status=needs_clarification`
+- exactly one clarification question
+- `clarification_token` is present
+- `expires_at` is present
+- no `project` exists yet
 
-Verified task list from the successful live run:
+Presenter note:
 
-1. Analyze the Vague Product Idea
-2. Deconstruct Value Proposition
-3. Synthesize Constraints and Feasibility
-4. Formulate Candidate Next Steps
-5. Select the Single Clear Next Step
+D.AI.SY is identifying that the user has a consequential priority conflict. It asks the human which priority should govern the plan instead of silently choosing for them.
 
-Acceptable recording variation: Gemini may change the wording of task titles. The take is still valid if the response contains 4 to 6 safe tasks, all capabilities are `reasoning`, and no external action is introduced.
+Do not expose the clarification-token value in the video. If using Swagger, zoom or crop around the field names and values needed for proof while avoiding the actual token. If using a terminal, store the token privately and do not print it.
 
-### Request 2: Execution
+## 3. Provide Human Direction
 
-Send immediately after the planning response:
+Use the accepted direction:
+
+```text
+Understanding the customer problem matters more. I don't want to build anything yet.
+```
+
+Submit it with the returned clarification context privately:
+
+```json
+{
+  "message": "Understanding the customer problem matters more. I don't want to build anything yet.",
+  "clarification_token": "<returned clarification_token omitted>"
+}
+```
+
+Expected response:
+
+- planner runs only after the human answer
+- project is created
+- the original goal and human answer are carried into planning
+- the plan adapts toward customer discovery before building
+
+Presenter note:
+
+The human supplies the governing priority. D.AI.SY uses that answer to create an adaptive plan rather than choosing the priority itself.
+
+## 4. Demonstrate Adaptive Planning
+
+Highlight the planner response:
+
+- `agent=planner`
+- `project`
+- `project.tasks`
+- task `capability`
+- task `status`
+
+Representative production-verified task types included:
+
+- defining the target customer or interview profile
+- preparing a discovery interview guide
+- customer discovery or interview work
+- synthesizing discovery findings
+
+Do not require exact task titles. Gemini-generated wording can vary. The invariant proof is that the project appears only after human direction and the task plan reflects the user's stated priority: customer understanding before building.
+
+Explain that the proposed affordable AI call-handling service is the user's product hypothesis. Proposed service capabilities are hypotheses or validation targets, not implemented D.AI.SY capabilities.
+
+## 5. Demonstrate Agentic Execution
+
+After planning, submit:
 
 ```json
 {"message":"execute"}
 ```
 
-Expected execution result:
+Expected response fields to highlight:
 
-- HTTP status `200`
-- Response variant: `ExecutionResponse`
-- `agent` is `execution`
-- `status` is `completed`
-- `current_task.capability` is `reasoning`
-- `execution.success` is `true`
-- `observation.outcome` is `completed`
-- `decision.decision` is `continue`
-- `continuation.continue_applied` is `true`
-- `continuation.continued_task.capability` is `reasoning`
-- `continuation.continued_execution.success` is `true`
-- `continuation.continued_observation.outcome` is `completed`
-- `continuation.continued_decision.decision` is `continue`
-- There is no nested continuation beyond the one visible continuation object
+- `agent=execution`
+- `current_task`
+- `current_task.capability`
+- `execution.success`
+- `observation.outcome`
+- `decision.decision`
+- `continuation`
 
-## 3. Expected Response Checkpoints
+Presenter note:
 
-### Planning Checkpoints
+D.AI.SY executes an eligible task through the deployed workflow, records a structured observation, and produces a next-step decision.
 
-Visibly verify:
+## 6. Explain Bounded Continuation Correctly
 
-- `agent: planner`
-- `goal` matches the messy/vague user goal
-- `knowledge` may include `welcome.txt`
-- `project.tasks` exists
-- Each visible task has `capability: reasoning`
-- Each visible task starts as `status: pending`
-- No `phone_call`, `research`, or `document_generation` capability appears
+Do not require `continuation.continue_applied=true`.
 
-Do not depend on exact Gemini-generated prose. The structural fields are the evidence.
+The success condition is that D.AI.SY evaluates continuation and enforces the capability and authority boundary.
 
-### Execution Checkpoints
+Valid outcomes:
 
-Visibly verify:
+- If the next pending task is eligible `reasoning`, D.AI.SY may automatically execute one additional reasoning task.
+- If the next pending task is `document_generation`, `research`, `phone_call`, another non-reasoning capability, or authority-requiring work, D.AI.SY should not automatically execute it.
+- In a non-reasoning or authority-bound case, `continue_applied=false` is a successful safety result.
 
-- `agent: execution`
-- `status: completed`
-- `execution.success: true`
-- `current_task.status: completed`
-- `current_task.capability: reasoning`
-- `observation.success: true`
-- `observation.outcome: completed`
-- `decision.decision: continue`
-- `continuation.continue_applied: true`
-- `continued_task.status: completed`
-- `continued_task.capability: reasoning`
-- `continued_observation.outcome: completed`
-- `continued_decision.decision: continue`
+Highlight when present:
 
-Safety checkpoint: the response should not contain `phone_call`, CALL-E execution, confirmation tokens, phone numbers, or any real-world action result.
+- `continuation.continue_applied`
+- `continuation.continue_skipped_reason`
+- `continuation.continued_task.capability`
+- `continuation.continued_decision`
 
-## 4. What Must Be Visible On Screen
+Explain clearly:
 
-Show enough evidence for a judge to see this is the live deployed system:
+> A decision to continue is not unrestricted authorization to execute whatever comes next.
 
-- The Cloud Run URL: `https://daisy-backend-pbhnglpapq-ue.a.run.app`
-- Safe startup check, such as `GET /` or `GET /health`
-- Cloud Run service metadata showing revision `daisy-backend-00001-k9g`, region `us-east1`, and service name `daisy-backend`
-- The planning request body and live HTTP `200` response
-- The planner response with reasoning tasks
-- The execution request body and live HTTP `200` response
-- The execution response fields for `execution`, `observation`, `decision`, and `continuation`
-- Cloud Run log evidence for planner activity showing `Models.generate_content`
-- Cloud Run log evidence for execution activity showing `AsyncModels.generate_content`
-- `DAISY_ENABLE_REAL_CALLS=0`
-- Gemini credential configured from Secret Manager without showing the secret value
-- No CALL-E invocation and no phone call
+## 7. Briefly Establish the Discovery Boundary
 
-Do not show API keys, secret payloads, personal credentials, billing details, OAuth tokens, or any CALL-E execution screen.
+Mention the verified contrast without turning it into a second long demo:
 
-## 5. Architecture Talk Track
+Evidence-resolvable uncertainty can proceed into the plan. For example, uncertainty about which customer segment has the largest missed-call problem can become discovery, research, comparison, or validation work instead of forcing the human to decide without evidence.
 
-D.A.I.S.Y. exposes a FastAPI `/chat` endpoint on Cloud Run. A user sends a messy goal. The router sends planning language to the PlannerAgent, which uses Gemini to convert the goal into structured project tasks. The ExecutionAgent then selects the first pending task and passes it to the WorkflowEngine.
-
-For reasoning tasks, the WorkflowEngine resolves the reasoning capability to the Google ADK-backed executor. The ADK executor uses the Google GenAI runtime to produce a concise execution result. The WorkflowEngine wraps that result in a `TaskObservation`, including success, task status, capability, outcome, and summary.
-
-The observation is passed to the provider-neutral `DecisionPolicy`. If the task completed and pending work remains, the policy returns `continue`. D.A.I.S.Y. applies at most one automatic continuation, and only if the next pending task is also `reasoning`. That creates bounded autonomy: the system can take a safe follow-up step, but it does not enter an unbounded loop.
-
-External phone action is a separate capability. It remains behind the CALL-E authority gate and is not part of this All Things Agentic demo. `DAISY_ENABLE_REAL_CALLS=0` confirms real calls are disabled.
-
-## 6. Taskmaster Alignment
-
-This is agentic, not just chatbot output:
-
-- It decomposes a vague goal into structured tasks.
-- It assigns explicit task capabilities.
-- It executes a task through the reasoning capability.
-- It observes the result as structured state.
-- It makes an explicit next-step decision.
-- It applies one bounded follow-up action autonomously.
-- It preserves human authority for consequential external actions like phone calls.
-
-For Taskmaster, the key proof is the loop:
-
-```text
-goal -> plan -> execute -> observe -> decide -> bounded continue -> stop
-```
-
-## 7. Recording Checklist
-
-### Windows To Have Ready
-
-- Browser or terminal showing `https://daisy-backend-pbhnglpapq-ue.a.run.app`
-- API client or terminal for `POST /chat`
-- Cloud Run console or read-only terminal output for service metadata
-- Cloud Run logs filtered around the demo time
-- `docs/submission/LIVE_AGENTIC_PROOF.md`
-- `docs/submission/SUBMISSION_EVIDENCE_INDEX.md`
-
-### Request Bodies To Paste
-
-Planning:
+Optional secondary prompt if needed:
 
 ```json
-{"message":"Plan a reasoning-only D.A.I.S.Y. demo that helps a user clarify a vague product idea into one clear next step. Use only reasoning tasks. Avoid phone calls, internet research, file generation, email, purchases, credentials, or external real-world activity."}
+{
+  "message": "I want to validate an affordable AI service for local businesses that miss customer calls. I don't know which customer segment has the biggest missed-call problem. Build a plan to compare likely segments and determine which one I should validate first."
+}
 ```
 
-Execution:
+Expected:
 
-```json
-{"message":"execute"}
-```
+- planner response
+- no unnecessary clarification
+- uncertainty becomes discovery or validation work
 
-### Optional PowerShell Shape
+Use this only if the video needs an explicit contrast. The primary demo remains the human-decision clarification flow.
 
-```powershell
-$base = "https://daisy-backend-pbhnglpapq-ue.a.run.app"
+## 8. On-Screen Checklist
 
-$planBody = @{
-  message = "Plan a reasoning-only D.A.I.S.Y. demo that helps a user clarify a vague product idea into one clear next step. Use only reasoning tasks. Avoid phone calls, internet research, file generation, email, purchases, credentials, or external real-world activity."
-} | ConvertTo-Json
+Show or narrate these invariant fields:
 
-Invoke-RestMethod -Uri "$base/chat" -Method Post -ContentType "application/json" -Body $planBody |
-  ConvertTo-Json -Depth 30
+- `agent`
+- `status`
+- `question`
+- `clarification_token` presence only
+- `expires_at`
+- absence of `project` before clarification
+- `project.tasks`
+- `capability`
+- `current_task`
+- `execution.success`
+- `observation.outcome`
+- `decision.decision`
+- `continuation.continue_applied`
+- `continuation.continue_skipped_reason`
+- `continued_task.capability` when applicable
 
-$executeBody = @{ message = "execute" } | ConvertTo-Json
+Do not depend on exact generated task wording.
 
-Invoke-RestMethod -Uri "$base/chat" -Method Post -ContentType "application/json" -Body $executeBody |
-  ConvertTo-Json -Depth 30
-```
+## 9. Do Not Show or Emphasize
 
-### Do Not Expose
+Do not show:
 
-- `GEMINI_API_KEY`
+- clarification-token values
+- API keys
+- secret values
+- OAuth or access credentials
 - Secret Manager payloads
-- OAuth tokens
-- personal credentials
-- billing details
-- CALL-E credentials
+- billing or personal-account details
+- raw logs containing user-message text
 - phone numbers
-- confirmation tokens
+- live CALL-E execution
+- internal HMAC or signing implementation details beyond "signed, time-limited clarification context"
 
-### Do Not Do During Recording
+Do not claim:
 
-- Do not enable CALL-E.
-- Do not set `DAISY_ENABLE_REAL_CALLS=1`.
-- Do not execute a `phone_call` task.
-- Do not redeploy.
-- Do not modify code.
-- Do not stage, commit, or push.
+- that D.AI.SY has implemented the proposed AI call-handling service
+- that D.AI.SY autonomously completes the whole project
+- that `decision=continue` grants unrestricted execution authority
+- that `continue_applied=true` is always required
+- that planned `phone_call` tasks were executed in this accepted walkthrough
 
-## 8. Failure Plan
+## 10. Recovery During Recording
 
-Acceptable variations:
+Safe recovery options:
 
-- Task title wording differs from the verified run.
-- Gemini-generated prose differs.
-- The plan has 4 to 6 tasks instead of exactly five.
-- Execution wording differs while preserving the same structural fields.
+- Temporary model/API failure: wait briefly and retry the same request once. Do not change code, configuration, secrets, deployment, or production data during recording.
+- Unexpected generated task wording: continue if the invariant fields and behavior are correct.
+- `continue_applied=false`: continue if the skipped reason shows the next task was non-reasoning or authority-bound. This is a successful safety result.
+- Another clarification response appears: check whether the prompt is still asking D.AI.SY to choose a consequential human priority. Either answer the clarification or restart with the exact primary prompt.
+- Swagger UI display issues: zoom/collapse fields or use a terminal/API client while keeping token values hidden.
 
-Restart the take:
+Stop without fixing during recording if:
 
-- The first request routes to `execution` instead of `planner`.
-- The plan includes `phone_call`, `research`, `document_generation`, or an external action.
-- The execution request returns `No project exists`.
-- The execution response lacks `TaskObservation`.
-- The execution response lacks `TaskDecision`.
-- `continuation.continue_applied` is false.
-- The response is too slow or visually unclear for the recording.
+- repeated `5xx` responses occur
+- any secret, credential, or token value appears on screen
+- the workflow is about to execute a live phone/CALL-E action
+- production configuration unexpectedly changes
 
-Stop without fixing during the recording:
+Do not redeploy, edit files, change secrets, change IAM, or modify Cloud Run during demo capture.
 
-- The service returns repeated `5xx` responses.
-- ADK/Gemini execution repeatedly fails.
-- Any workflow attempts to cross into `phone_call`.
-- Any secret or credential accidentally appears on screen.
+## 11. Success Criteria
 
-Do not propose or perform code changes during the demo capture session.
+The walkthrough succeeds when judges can see:
 
-## 9. Evidence Capture
+1. D.AI.SY identifies a consequential human-priority decision.
+2. D.AI.SY asks rather than choosing.
+3. No project exists before required human direction.
+4. The human answer changes or adapts the resulting plan.
+5. D.AI.SY executes an eligible task.
+6. Execution is observed.
+7. A next-step decision is produced.
+8. Continuation is evaluated and bounded appropriately.
+9. Proposed product capabilities are not misrepresented as D.AI.SY capabilities.
+10. Human authority remains intact.
 
-Save these separately from the final video:
+## 12. Secondary Backup Evidence
 
-- Screenshot of Cloud Run service URL, revision, and region.
-- Screenshot of safe `/health` response.
-- Screenshot or clipped terminal output of the planning request and response.
-- Screenshot or clipped terminal output of the execution response.
-- Screenshot showing `TaskObservation`.
-- Screenshot showing `TaskDecision`.
-- Screenshot showing `continuation.continue_applied=true`.
-- Screenshot showing `DAISY_ENABLE_REAL_CALLS=0`.
-- Screenshot showing Gemini secret mapping by name only, with no value.
-- Cloud Run log clip showing `Models.generate_content`.
-- Cloud Run log clip showing `AsyncModels.generate_content`.
-- Repository SHA: `8240a5ceb57c8220b3d752505fb2c88fffd01301`.
-- `docs/submission/LIVE_AGENTIC_PROOF.md`.
-- `docs/submission/SUBMISSION_EVIDENCE_INDEX.md`.
+Prior reasoning-only continuation evidence may be used as backup only:
 
-## 10. Video Script
+- a reasoning task completed
+- an observation was produced
+- the decision was `continue`
+- one additional eligible reasoning task executed automatically
+- recursive continuation did not occur
 
-Use this as a compact spoken script. Adjust only for natural delivery.
+This is not the primary walkthrough. The primary walkthrough is the production-verified Collaborative Partner flow on revision `daisy-backend-00002-mdt`.
 
-### 0:00-0:25 Opening
+## 13. Final Packaging TBD
 
-"D.A.I.S.Y. is built for the Taskmaster category. The problem is simple: people often bring AI vague goals, and ordinary chat stops at advice. D.A.I.S.Y. turns a messy goal into structured work, executes safe reasoning steps, observes what happened, and decides what should happen next while preserving human authority."
+Verify at packaging:
 
-### 0:25-0:55 Architecture
-
-"This live backend is running on Google Cloud Run. The user enters the FastAPI `/chat` endpoint. Planning requests go to the PlannerAgent, which uses Gemini to create structured tasks. Execution requests go to the ExecutionAgent and WorkflowEngine. Reasoning tasks are handled through the Google ADK-backed executor using the Google GenAI runtime. Every execution result becomes a TaskObservation, and a provider-neutral DecisionPolicy chooses the next action."
-
-### 0:55-1:45 Planning Demo
-
-"Here is the live Cloud Run URL. I am sending a reasoning-only user goal. The response is not just a chat answer. D.A.I.S.Y. creates a project and returns multiple tasks. Each task has a capability, and in this demo every capability is reasoning. There is no phone call, no external action, and no CALL-E execution."
-
-### 1:45-2:35 Execution Demo
-
-"Now I send the existing `execute` command. D.A.I.S.Y. selects the first pending reasoning task and executes it through the deployed execution path. The response shows execution success, the completed task, and a structured TaskObservation with outcome completed."
-
-### 2:35-3:15 Decision And Safety
-
-"The observation is evaluated by the DecisionPolicy. Because the task completed and safe reasoning work remains, the decision is continue. D.A.I.S.Y. applies exactly one bounded continuation into the next reasoning task. The second task also completes, but the system does not recursively continue forever. Phone actions remain behind the CALL-E authority boundary, and `DAISY_ENABLE_REAL_CALLS` is zero."
-
-### 3:15-3:35 Closing
-
-"This demonstrates the agentic loop judges should care about: goal to plan, plan to execution, execution to observation, observation to decision, and one bounded autonomous follow-up. D.A.I.S.Y. is not replacing human authority; it is making safe progress while keeping consequential external actions under explicit control."
-
-## 11. Final Success Criteria
-
-The All Things Agentic demo is complete when the recording captures:
-
-- Live Cloud Run service URL.
-- Revision `daisy-backend-00001-k9g`.
-- Planning request sent to deployed `/chat`.
-- Planner response with reasoning-only tasks.
-- Execution request sent to deployed `/chat`.
-- Execution success for the first reasoning task.
-- `TaskObservation.outcome=completed`.
-- `TaskDecision.decision=continue`.
-- `continuation.continue_applied=true`.
-- Exactly one additional reasoning task completed.
-- No recursive continuation shown.
-- Cloud Run logs showing `Models.generate_content`.
-- Cloud Run logs showing `AsyncModels.generate_content`.
-- `DAISY_ENABLE_REAL_CALLS=0`.
-- No CALL-E invocation.
-- No real phone call.
-- No secrets or credentials visible.
-
-When all of those are visible or preserved as supporting evidence, the All Things Agentic demo recording can be marked complete.
+- final repository SHA
+- final video artifact location
+- final screenshot or clip locations
+- official submission form fields
+- final submission wording required by the platform
