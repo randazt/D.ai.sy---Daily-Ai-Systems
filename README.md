@@ -491,17 +491,34 @@ Planned:
 - Execution history
 - Growth Passport storage
 
+Status:
+**Planned; now sequenced into Product Experience Phase 5E**
+
 ---
 
 ## Phase 5 — Product Experience
 
 Planned:
 
-- Web interface
-- Authentication
-- Dashboard
-- Growth Passport visualization
-- Workspace continuity
+- Phase 5A — Product Shell
+  - Responsive frontend
+  - D.AI.SY visual system
+  - Navigation
+  - Home experience
+- Phase 5B — Live Conversation
+  - Connect existing `/chat` API
+  - Render conversation, clarification, planning, and execution responses
+- Phase 5C — Project & Workflow Workspace
+  - Goals, plans, task states, workflow visualization, observations, decisions, and bounded continuation
+- Phase 5D — Human Agency UX
+  - Decision cards, approval boundaries, evidence/hypothesis indicators, and clear AI-vs-human authority states
+- Phase 5E — Persistence
+  - Authentication, Firestore, durable conversations, durable projects/goals, and activity history
+- Phase 5F — Personal D.AI.SY
+  - Today experience, continuity, Growth Passport, user-controlled preferences, and progress/agency visualization
+
+Status:
+**Planned product work; not yet implemented as full product features**
 
 ---
 
@@ -557,12 +574,11 @@ Unsupported external claims are framed as assumptions, hypotheses, estimates, il
 
 # Next Immediate Milestones
 
-- Preserve final competition demo evidence
-- Capture final video and screenshots
-- Run a fresh final backend test pass before submission packaging
-- Continue Firestore-backed persistent memory
-- Build the user-facing conversation workspace
-- Expand agent capabilities
+- Begin Phase 5A Product Shell
+- Define the responsive D.AI.SY visual system
+- Build navigation and Home / Today entry points
+- Prepare Phase 5B connection to the existing `/chat` API
+- Preserve clear current-vs-planned capability boundaries
 
 ---
 
@@ -587,7 +603,7 @@ The project now possesses:
 - Secure Cloud Run deployment
 - Competition evidence framework
 
-The next development milestone focuses on final submission artifact capture and persistent memory.
+The next development milestone focuses on the Product Experience phase, beginning with the product shell and Home / Today experience before persistence work.
 
 ---
 

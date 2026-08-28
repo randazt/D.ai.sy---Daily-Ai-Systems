@@ -1,8 +1,14 @@
 # D.AI.SY Competition Demo
 
+> **Status: Historical concept/demo planning document.**
+>
+> This file predates the current implemented-vs-planned capability boundary documented in `docs/product/VISION.md`. It includes planned capabilities that are not currently implemented, including authentication, persistent workspaces, persistent memory, Growth Passport storage/history, and return-visit continuity.
+>
+> For current product direction and capability status, see `docs/product/VISION.md`. For verified competition implementation evidence, see the applicable submission evidence documentation.
+
 ## Purpose
 
-This document defines the canonical end-to-end demonstration for D.AI.SY Version 1.
+This document defines the historical target end-to-end demonstration concept for D.AI.SY Version 1.
 
 Every engineering decision should support this workflow.
 
