@@ -150,6 +150,104 @@ Implemented:
 
 ---
 
+## Spin-Up Instructions
+
+Use these steps to run D.AI.SY locally from a fresh clone.
+
+1. Clone the repository and enter the project:
+
+```powershell
+git clone https://github.com/randazt/D.ai.sy---Daily-Ai-Systems.git
+cd D.ai.sy---Daily-Ai-Systems
+```
+
+2. Enter the backend directory and create a Python 3.12 virtual environment:
+
+Windows PowerShell:
+
+```powershell
+cd backend
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+macOS/Linux:
+
+```bash
+cd backend
+python3.12 -m venv .venv
+source .venv/bin/activate
+```
+
+3. Install backend dependencies:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+4. Create a local environment file from the template:
+
+Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+macOS/Linux:
+
+```bash
+cp .env.example .env
+```
+
+5. Edit `backend/.env` and set local-only values:
+
+```env
+GEMINI_API_KEY=<user's own Gemini API key>
+DAISY_CLARIFICATION_TOKEN_SECRET=<private locally generated secret>
+DAISY_ENABLE_REAL_CALLS=0
+
+# Optional
+GEMINI_MODEL=gemini-3.5-flash-lite
+```
+
+D.AI.SY uses `python-dotenv` and loads `.env`. Keep `.env` out of Git, do not commit credentials or tokens, and keep `DAISY_ENABLE_REAL_CALLS=0` for evaluation.
+
+6. Start the backend from `backend`:
+
+```bash
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+7. Verify the local service:
+
+Windows PowerShell:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/
+Invoke-RestMethod http://127.0.0.1:8000/health
+```
+
+macOS/Linux:
+
+```bash
+curl http://127.0.0.1:8000/
+curl http://127.0.0.1:8000/health
+```
+
+The root endpoint should identify `system: D.AI.SY`, `status: running`, and `version: 0.1.0`. The health endpoint should return `status: healthy`, `service: D.AI.SY Backend`, and `version: 0.1.0`.
+
+8. Open Swagger UI at `http://127.0.0.1:8000/docs`, then run a smoke test with `POST /chat`:
+
+```json
+{
+  "message": "Help me plan how to validate an AI service idea for local businesses."
+}
+```
+
+A successful request should return a structured D.AI.SY agent response or planning output. If clarification is required, the API may instead return a clarification request and `clarification_token`; do not expose or commit that token.
+
+---
+
 ## Security
 
 Implemented:
