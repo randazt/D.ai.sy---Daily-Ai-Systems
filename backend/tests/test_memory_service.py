@@ -1,7 +1,11 @@
 import unittest
 
 from app.models.memory import UserStrategyMemory
-from app.services.memory_service import InMemoryMemoryStore, MemoryService
+from app.services.memory_service import (
+    InMemoryMemoryStore,
+    MemoryService,
+    create_memory_store,
+)
 
 
 class MemoryServiceTests(unittest.TestCase):
@@ -78,6 +82,36 @@ class MemoryServiceTests(unittest.TestCase):
     def test_retrieval_rejects_empty_client_id(self):
         with self.assertRaisesRegex(ValueError, "client_id is required"):
             self.service.get_approved_strategies(client_id="   ")
+
+    def test_create_memory_store_defaults_to_in_memory(self):
+        store = create_memory_store(env={})
+
+        self.assertIsInstance(store, InMemoryMemoryStore)
+
+    def test_create_memory_store_accepts_explicit_in_memory(self):
+        store = create_memory_store(
+            env={"DAISY_MEMORY_STORE": "in_memory"}
+        )
+
+        self.assertIsInstance(store, InMemoryMemoryStore)
+
+    def test_create_memory_store_rejects_unknown_backend(self):
+        with self.assertRaisesRegex(
+            ValueError,
+            "Unsupported DAISY_MEMORY_STORE",
+        ):
+            create_memory_store(
+                env={"DAISY_MEMORY_STORE": "mystery-store"}
+            )
+
+    def test_create_memory_store_selects_firestore(self):
+        from app.services.firestore_memory_store import FirestoreMemoryStore
+
+        store = create_memory_store(
+            env={"DAISY_MEMORY_STORE": "firestore"}
+        )
+
+        self.assertIsInstance(store, FirestoreMemoryStore)
 
 
 if __name__ == "__main__":

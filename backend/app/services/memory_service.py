@@ -1,3 +1,5 @@
+import os
+from collections.abc import Mapping
 from typing import Protocol
 
 from app.models.memory import UserStrategyMemory
@@ -28,6 +30,32 @@ class InMemoryMemoryStore:
 
     def list_for_client(self, client_id: str) -> list[UserStrategyMemory]:
         return list(self._memories.get(client_id.strip(), []))
+
+
+def create_memory_store(
+    *,
+    env: Mapping[str, str] | None = None,
+) -> MemoryStore:
+    """
+    Select the configured memory backend.
+
+    Firestore is imported lazily so local/test imports do not initialize
+    Google Cloud infrastructure unless Firestore is explicitly selected.
+    """
+    environment = os.environ if env is None else env
+    backend = environment.get("DAISY_MEMORY_STORE", "in_memory").strip().lower()
+
+    if backend == "in_memory":
+        return InMemoryMemoryStore()
+
+    if backend == "firestore":
+        from app.services.firestore_memory_store import FirestoreMemoryStore
+
+        return FirestoreMemoryStore()
+
+    raise ValueError(
+        f"Unsupported DAISY_MEMORY_STORE: {backend!r}"
+    )
 
 
 class MemoryService:
@@ -70,4 +98,4 @@ class MemoryService:
         ]
 
 
-memory_service = MemoryService(InMemoryMemoryStore())
+memory_service = MemoryService(create_memory_store())
