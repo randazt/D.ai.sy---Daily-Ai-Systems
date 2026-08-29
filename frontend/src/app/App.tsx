@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 
 import { AppShell } from "../components/layout/AppShell";
+import { Conversation } from "../features/conversation/Conversation";
 import { Home } from "../features/home/Home";
 import { PlannedSurface } from "../features/planned/PlannedSurface";
 
@@ -20,19 +21,13 @@ export type SurfaceKey =
   | "settings";
 
 const plannedSurfaceCopy: Record<
-  Exclude<SurfaceKey, "home">,
+  Exclude<SurfaceKey, "home" | "conversations">,
   {
     title: string;
     description: string;
     plannedFor: string;
   }
 > = {
-  conversations: {
-    title: "Conversations",
-    description:
-      "A future place for live D.AI.SY conversation once the existing /chat API is connected.",
-    plannedFor: "Phase 5B",
-  },
   goals: {
     title: "Goals",
     description:
@@ -107,6 +102,10 @@ export function App() {
   const activeContent = useMemo(() => {
     if (activeSurface === "home") {
       return <Home />;
+    }
+
+    if (activeSurface === "conversations") {
+      return <Conversation />;
     }
 
     return <PlannedSurface {...plannedSurfaceCopy[activeSurface]} />;
