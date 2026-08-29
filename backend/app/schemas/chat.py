@@ -6,6 +6,9 @@ from pydantic import BaseModel
 class ChatRequest(BaseModel):
     message: str
     clarification_token: Optional[str] = None
+    client_id: Optional[str] = None
+    memory_action: Optional[str] = None
+    memory_token: Optional[str] = None
 
 
 class ChatResponse(BaseModel):
@@ -16,18 +19,17 @@ class ChatResponse(BaseModel):
 # Typed public response contract for POST /chat
 #
 # These schemas document, for Swagger/OpenAPI, the externally
-# observable response shapes already produced by ChatService today
-# (conversation, planner, and execution agents). They are used ONLY
-# to document the "responses" schema on the /chat route so that
-# Swagger reflects the real public contract without changing the
-# route's runtime behavior (the endpoint still returns the agent's
-# raw dict; FastAPI does not re-validate/re-serialize through these
-# models unless they are set as response_model).
+# observable response shapes produced by ChatService.
 #
-# These schemas intentionally mirror only fields already returned
-# today. They MUST NOT include provider/runtime internals such as
-# CALL-E confirmation tokens, ADK runner/session identifiers,
-# CapabilityRegistry internals, or environment configuration.
+# They are used ONLY to document the "responses" schema on the /chat
+# route. The endpoint still returns ChatService's raw dict; FastAPI
+# does not re-validate/re-serialize through these models unless they
+# are configured as response_model.
+#
+# These schemas intentionally exclude provider/runtime internals such
+# as CALL-E confirmation tokens, ADK runner/session identifiers,
+# CapabilityRegistry internals, environment configuration, and signed
+# authorization tokens that are not part of a documented response.
 # ----------------------------------------------------------------
 
 
@@ -77,6 +79,20 @@ class ClarificationResponse(BaseModel):
     message: Optional[str] = None
 
 
+class MemoryResponse(BaseModel):
+    """
+    Public result of an explicit memory approval attempt.
+
+    The signed memory authorization token is request-side authority
+    and is never echoed back in this response.
+    """
+
+    agent: Literal["memory"]
+    status: Literal["remembered", "invalid_authorization"]
+    strategy: Optional[str] = None
+    message: Optional[str] = None
+
+
 class ExecutionProjectSchema(BaseModel):
     title: str
     description: str
@@ -84,12 +100,6 @@ class ExecutionProjectSchema(BaseModel):
 
 
 class TaskObservationSchema(BaseModel):
-    """
-    Mirrors app.models.project.TaskObservation. Deliberately excludes
-    any provider/executor identity per the D.A.I.S.Y. observation
-    contract (see execution observation milestone).
-    """
-
     task_title: str
     capability: str
     status: str
@@ -105,7 +115,7 @@ class ExecutionCurrentTaskSchema(BaseModel):
     capability: Optional[str] = None
     inputs: dict[str, Any] = {}
     status: str
-    output: str
+    output: str = ""
     observation: Optional[TaskObservationSchema] = None
 
 
@@ -156,5 +166,6 @@ ChatEndpointResponse = Union[
     ExecutionResponse,
     AgentStatusMessageResponse,
     ClarificationResponse,
+    MemoryResponse,
     ConversationResponse,
 ]

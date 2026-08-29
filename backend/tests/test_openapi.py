@@ -8,6 +8,7 @@ PUBLIC_RESPONSE_VARIANTS = {
     "ExecutionResponse",
     "AgentStatusMessageResponse",
     "ClarificationResponse",
+    "MemoryResponse",
     "ConversationResponse",
 }
 SUPPORTED_OUTCOMES = {
@@ -219,6 +220,27 @@ class OpenAPIDocumentationTests(unittest.TestCase):
 
         self.assertEqual(set(properties), expected)
 
+    def test_memory_response_exposes_only_public_fields(self):
+        properties = self.schemas["MemoryResponse"]["properties"]
+        expected = {
+            "agent",
+            "status",
+            "strategy",
+            "message",
+        }
+
+        self.assertEqual(set(properties), expected)
+        self.assertNotIn("memory_token", properties)
+
+    def test_memory_response_uses_exact_status_enum(self):
+        status = self.schemas["MemoryResponse"]["properties"]["status"]
+        documented_values = _enum_values(status)
+
+        self.assertEqual(
+            documented_values,
+            {"remembered", "invalid_authorization"},
+        )
+
     def test_task_inputs_are_provider_neutral_objects(self):
         for schema_name in ("PlannerTaskSchema", "ExecutionCurrentTaskSchema"):
             with self.subTest(schema=schema_name):
@@ -248,13 +270,19 @@ class OpenAPIDocumentationTests(unittest.TestCase):
         forbidden_exact = {
             "plan_id",
             "confirm_token",
+            "memory_token",
             "to_phones",
             "calle_command",
             "api_key",
             "api_keys",
             "credentials",
         }
-        forbidden_fragments = ("calle", "adk", "api_key", "credential")
+        forbidden_fragments = (
+            "calle",
+            "adk",
+            "api_key",
+            "credential",
+        )
         exposed = {
             field
             for field in public_fields
@@ -266,10 +294,22 @@ class OpenAPIDocumentationTests(unittest.TestCase):
 
     def test_chat_request_still_requires_message(self):
         request_schema = self.schemas["ChatRequest"]
-        self.assertEqual(request_schema["properties"]["message"]["type"], "string")
-        self.assertIn("clarification_token", request_schema["properties"])
+        properties = request_schema["properties"]
+
+        self.assertEqual(properties["message"]["type"], "string")
+
+        optional_fields = {
+            "clarification_token",
+            "client_id",
+            "memory_action",
+            "memory_token",
+        }
+        for field in optional_fields:
+            with self.subTest(field=field):
+                self.assertIn(field, properties)
+                self.assertNotIn(field, request_schema["required"])
+
         self.assertIn("message", request_schema["required"])
-        self.assertNotIn("clarification_token", request_schema["required"])
 
         request_body = self.chat_post["requestBody"]
         request_ref = request_body["content"]["application/json"]["schema"]["$ref"]

@@ -14,4 +14,7 @@ async def chat(request: ChatRequest):
     return await chat_service.chat(
         request.message,
         clarification_token=request.clarification_token,
+        client_id=request.client_id,
+        memory_action=request.memory_action,
+        memory_token=request.memory_token,
     )
