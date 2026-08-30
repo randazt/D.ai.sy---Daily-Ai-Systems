@@ -19,7 +19,7 @@ TEST_SECRET = "test-chat-memory-secret"
 class FailingRouter:
     def route(self, message: str) -> str:
         raise AssertionError(
-            "routing should not run for explicit memory approval"
+            "routing should not run for explicit memory actions"
         )
 
 
@@ -82,6 +82,166 @@ class ChatMemoryFlowTests(unittest.IsolatedAsyncioTestCase):
             memory_manager=self.memory_service,
             memory_authorization=self.authorization_service,
         )
+
+    async def test_proposal_returns_exact_strategy_signed_token_and_expiration(
+        self,
+    ):
+        with patch.dict(
+            os.environ,
+            {MEMORY_AUTHORIZATION_SECRET_ENV: TEST_SECRET},
+            clear=False,
+        ):
+            service = self.create_service()
+
+            response = await service.chat(
+                "  Show me the whole system before the details.  ",
+                client_id="client-a",
+                memory_action="propose",
+            )
+
+            self.assertEqual(response["agent"], "memory")
+            self.assertEqual(response["status"], "approval_required")
+            self.assertEqual(
+                response["strategy"],
+                "Show me the whole system before the details.",
+            )
+            self.assertIsInstance(response["memory_token"], str)
+            self.assertTrue(response["memory_token"])
+            self.assertEqual(
+                response["expires_at"],
+                "1970-01-01T00:21:40Z",
+            )
+
+            payload = self.authorization_service.validate_token(
+                response["memory_token"]
+            )
+
+        self.assertEqual(payload["client_id"], "client-a")
+        self.assertEqual(
+            payload["strategy"],
+            "Show me the whole system before the details.",
+        )
+
+    async def test_proposal_does_not_persist_strategy(self):
+        with patch.dict(
+            os.environ,
+            {MEMORY_AUTHORIZATION_SECRET_ENV: TEST_SECRET},
+            clear=False,
+        ):
+            service = self.create_service()
+
+            response = await service.chat(
+                "Show me the big picture first.",
+                client_id="client-a",
+                memory_action="propose",
+            )
+
+        self.assertEqual(response["status"], "approval_required")
+        self.assertEqual(
+            self.memory_service.get_approved_strategies(
+                client_id="client-a"
+            ),
+            [],
+        )
+
+    async def test_proposal_without_client_id_fails_closed(self):
+        with patch.dict(
+            os.environ,
+            {MEMORY_AUTHORIZATION_SECRET_ENV: TEST_SECRET},
+            clear=False,
+        ):
+            service = self.create_service()
+
+            response = await service.chat(
+                "Show me the big picture first.",
+                memory_action="propose",
+            )
+
+        self.assertEqual(response["agent"], "memory")
+        self.assertEqual(response["status"], "invalid_authorization")
+        self.assertNotIn("memory_token", response)
+
+    async def test_proposal_with_empty_strategy_fails_closed(self):
+        with patch.dict(
+            os.environ,
+            {MEMORY_AUTHORIZATION_SECRET_ENV: TEST_SECRET},
+            clear=False,
+        ):
+            service = self.create_service()
+
+            response = await service.chat(
+                "   ",
+                client_id="client-a",
+                memory_action="propose",
+            )
+
+        self.assertEqual(response["agent"], "memory")
+        self.assertEqual(response["status"], "invalid_authorization")
+        self.assertNotIn("memory_token", response)
+        self.assertEqual(
+            self.memory_service.get_approved_strategies(
+                client_id="client-a"
+            ),
+            [],
+        )
+
+    async def test_proposal_missing_signing_secret_fails_closed(self):
+        with patch.dict(
+            os.environ,
+            {},
+            clear=False,
+        ):
+            previous_secret = os.environ.pop(
+                MEMORY_AUTHORIZATION_SECRET_ENV,
+                None,
+            )
+            try:
+                service = self.create_service()
+
+                response = await service.chat(
+                    "Show me the big picture first.",
+                    client_id="client-a",
+                    memory_action="propose",
+                )
+            finally:
+                if previous_secret is not None:
+                    os.environ[
+                        MEMORY_AUTHORIZATION_SECRET_ENV
+                    ] = previous_secret
+
+        self.assertEqual(response["agent"], "memory")
+        self.assertEqual(response["status"], "invalid_authorization")
+        self.assertNotIn("memory_token", response)
+        self.assertEqual(
+            self.memory_service.get_approved_strategies(
+                client_id="client-a"
+            ),
+            [],
+        )
+
+    async def test_memory_proposal_bypasses_normal_routing(self):
+        registry = RecordingRegistry()
+
+        with patch.dict(
+            os.environ,
+            {MEMORY_AUTHORIZATION_SECRET_ENV: TEST_SECRET},
+            clear=False,
+        ):
+            service = self.create_service(
+                registry=registry,
+                router=FailingRouter(),
+            )
+
+            response = await service.chat(
+                "Show me the big picture first.",
+                client_id="client-a",
+                memory_action="propose",
+            )
+
+        self.assertEqual(response["status"], "approval_required")
+        self.assertEqual(registry.planner.calls, [])
+        self.assertEqual(registry.execution.calls, [])
+        self.assertEqual(registry.conversation.calls, [])
 
     async def test_explicit_approval_persists_exact_signed_strategy(self):
         with patch.dict(
@@ -194,8 +354,20 @@ class ChatMemoryFlowTests(unittest.IsolatedAsyncioTestCase):
                 client_id="client-a",
                 strategy="Show me the big picture first.",
             )
-            token = proposal["memory_token"]
-            tampered_token = f"{token[:-1]}x"
+
+            payload_part, signature_part = (
+                proposal["memory_token"].split(".", 1)
+            )
+
+            replacement = (
+                "A" if payload_part[0] != "A" else "B"
+            )
+            tampered_payload = (
+                replacement + payload_part[1:]
+            )
+            tampered_token = (
+                f"{tampered_payload}.{signature_part}"
+            )
 
             service = self.create_service()
 

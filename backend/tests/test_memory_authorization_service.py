@@ -124,7 +124,13 @@ class MemoryAuthorizationServiceTests(unittest.TestCase):
                 strategy="Show me the big picture first.",
             )
             token = proposal["memory_token"]
-            tampered_token = f"{token[:-1]}x"
+
+            payload_part, signature_part = token.split(".", 1)
+            replacement = "A" if payload_part[0] != "A" else "B"
+            tampered_payload = replacement + payload_part[1:]
+            tampered_token = (
+                f"{tampered_payload}.{signature_part}"
+            )
 
             with self.assertRaises(MemoryAuthorizationError):
                 self.service.validate_token(tampered_token)

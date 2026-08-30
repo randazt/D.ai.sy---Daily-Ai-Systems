@@ -23,9 +23,14 @@ class ChatService:
     ChatService is responsible for routing a request to the
     appropriate registered agent and returning that agent's result.
 
-    Explicit memory approval is handled before normal routing so
-    persistent user-owned memory cannot be created implicitly by an
-    agent or by ordinary conversational language.
+    Explicit memory proposal and approval actions are handled before
+    normal routing so persistent user-owned memory cannot be created
+    implicitly by an agent or by ordinary conversational language.
+
+    A proposal does not persist memory. It binds the exact strategy
+    presented by the human to the exact client identity in a signed,
+    short-lived authorization token. Persistence happens only after
+    that proposal is explicitly approved.
 
     Project state is owned by the agents and ProjectService,
     not duplicated here.
@@ -58,6 +63,7 @@ class ChatService:
     ):
         if memory_action is not None:
             return self._handle_memory_action(
+                message=message,
                 client_id=client_id,
                 memory_action=memory_action,
                 memory_token=memory_token,
@@ -98,13 +104,66 @@ class ChatService:
     def _handle_memory_action(
         self,
         *,
+        message: str,
         client_id: str | None,
         memory_action: str,
         memory_token: str | None,
     ):
-        if memory_action != "approve":
+        if memory_action == "propose":
+            return self._propose_memory_strategy(
+                client_id=client_id,
+                strategy=message,
+            )
+
+        if memory_action == "approve":
+            return self._approve_memory_strategy(
+                client_id=client_id,
+                memory_token=memory_token,
+            )
+
+        return self._invalid_memory_authorization_response()
+
+    def _propose_memory_strategy(
+        self,
+        *,
+        client_id: str | None,
+        strategy: str,
+    ):
+        if not client_id or not client_id.strip():
             return self._invalid_memory_authorization_response()
 
+        if not strategy or not strategy.strip():
+            return self._invalid_memory_authorization_response()
+
+        normalized_client_id = client_id.strip()
+        normalized_strategy = strategy.strip()
+
+        try:
+            proposal = self._memory_authorization.create_proposal(
+                client_id=normalized_client_id,
+                strategy=normalized_strategy,
+            )
+        except (MemoryAuthorizationError, ValueError):
+            return self._invalid_memory_authorization_response()
+
+        return {
+            "agent": "memory",
+            "status": "approval_required",
+            "strategy": proposal["strategy"],
+            "memory_token": proposal["memory_token"],
+            "expires_at": proposal["expires_at"],
+            "message": (
+                "Would you like me to remember this strategy for "
+                "future conversations?"
+            ),
+        }
+
+    def _approve_memory_strategy(
+        self,
+        *,
+        client_id: str | None,
+        memory_token: str | None,
+    ):
         if not client_id or not client_id.strip():
             return self._invalid_memory_authorization_response()
 

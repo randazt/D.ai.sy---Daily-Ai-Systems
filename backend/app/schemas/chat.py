@@ -28,8 +28,12 @@ class ChatResponse(BaseModel):
 #
 # These schemas intentionally exclude provider/runtime internals such
 # as CALL-E confirmation tokens, ADK runner/session identifiers,
-# CapabilityRegistry internals, environment configuration, and signed
-# authorization tokens that are not part of a documented response.
+# CapabilityRegistry internals, and environment configuration.
+#
+# A short-lived signed memory authorization token is intentionally
+# exposed only when D.AI.SY is asking the client for explicit approval
+# to remember an exact user-owned strategy. That token is required to
+# complete the subsequent approval request.
 # ----------------------------------------------------------------
 
 
@@ -81,15 +85,31 @@ class ClarificationResponse(BaseModel):
 
 class MemoryResponse(BaseModel):
     """
-    Public result of an explicit memory approval attempt.
+    Public result of an explicit memory proposal or approval attempt.
 
-    The signed memory authorization token is request-side authority
-    and is never echoed back in this response.
+    approval_required:
+        No memory has been persisted. The response contains the exact
+        proposed strategy plus a short-lived signed authorization token
+        that the client must return if the human explicitly approves.
+
+    remembered:
+        The signed proposal was validated and the exact authorized
+        strategy was persisted.
+
+    invalid_authorization:
+        The proposal or approval request failed closed and nothing was
+        remembered.
     """
 
     agent: Literal["memory"]
-    status: Literal["remembered", "invalid_authorization"]
+    status: Literal[
+        "approval_required",
+        "remembered",
+        "invalid_authorization",
+    ]
     strategy: Optional[str] = None
+    memory_token: Optional[str] = None
+    expires_at: Optional[str] = None
     message: Optional[str] = None
 
 

@@ -1840,3 +1840,93 @@ Completed engineering is separated from remaining competition work. Open priorit
 - finalize reproducible setup/spin-up documentation
 - assemble competition demo/submission evidence
 - preserve provenance separating pre-existing D.A.I.S.Y. work from competition-period development
+---
+
+## D.AI.SY Development Log — August 29, 2026
+
+### Explicit, User-Authorized Strategy Memory
+
+This checkpoint establishes the authorization and persistence boundary for D.AI.SY's adaptive memory.
+
+Design principle:
+
+**AI assists. Humans decide.**
+
+Memory is not created from ordinary conversation, inferred diagnosis, or passive profiling. A user-owned strategy must move through an explicit proposal and approval flow before persistence.
+
+### Memory Domain and Persistence
+
+Implemented `UserStrategyMemory` for explicit, user-approved strategies.
+
+Implemented memory storage abstraction with:
+
+- in-memory storage for local/test use
+- Firestore-backed persistent storage
+- client-partitioned memory records
+
+Real Firestore connectivity and D.AI.SY memory write/retrieval were verified during development.
+
+### Explicit Memory Authorization
+
+Implemented a dedicated authorization boundary:
+
+User-owned strategy  
+→ memory proposal  
+→ signed short-lived authorization token  
+→ explicit human approval  
+→ validation  
+→ persistence
+
+Authorization binds the exact client and strategy. Invalid, malformed, expired, tampered, mismatched, or unavailable authorization fails closed.
+
+### Chat Memory Integration
+
+The `/chat` flow now supports structured memory actions:
+
+- `propose`
+- `approve`
+
+A proposal creates an authorization request but does not persist memory.
+
+An approval validates the signed authorization and persists only the exact authorized strategy.
+
+Ordinary chat and conversational responses such as `"yes"` do not create memory.
+
+### Public API Contract
+
+Memory responses support:
+
+- `approval_required`
+- `remembered`
+- `invalid_authorization`
+
+The short-lived `memory_token` is exposed only where required for the explicit proposal/approval flow.
+
+### Verification
+
+Latest verified backend state:
+
+- memory authorization tests: 11/11 passing
+- chat memory flow tests: 16/16 passing
+- OpenAPI documentation tests: 21/21 passing
+- complete backend regression suite: 209/209 passing
+
+### Current Boundary
+
+This checkpoint establishes:
+
+**proposal → explicit approval → authorized persistence**
+
+It does not yet claim complete adaptive memory behavior.
+
+The next submission-critical milestone is:
+
+**approved memory → retrieval → human choice to apply → observable adaptation**
+
+This preserves D.AI.SY's architecture:
+
+**Human understanding → Human decision → Agentic action**
+
+and its mission:
+
+**Helping people become more capable—not more dependent.**

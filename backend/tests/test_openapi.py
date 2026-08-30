@@ -24,6 +24,11 @@ SUPPORTED_DECISIONS = {
     "request_authority",
     "stop",
 }
+SUPPORTED_MEMORY_STATUSES = {
+    "approval_required",
+    "remembered",
+    "invalid_authorization",
+}
 
 
 def _referenced_schema_names(value):
@@ -220,17 +225,18 @@ class OpenAPIDocumentationTests(unittest.TestCase):
 
         self.assertEqual(set(properties), expected)
 
-    def test_memory_response_exposes_only_public_fields(self):
+    def test_memory_response_exposes_exact_public_fields(self):
         properties = self.schemas["MemoryResponse"]["properties"]
         expected = {
             "agent",
             "status",
             "strategy",
+            "memory_token",
+            "expires_at",
             "message",
         }
 
         self.assertEqual(set(properties), expected)
-        self.assertNotIn("memory_token", properties)
 
     def test_memory_response_uses_exact_status_enum(self):
         status = self.schemas["MemoryResponse"]["properties"]["status"]
@@ -238,7 +244,19 @@ class OpenAPIDocumentationTests(unittest.TestCase):
 
         self.assertEqual(
             documented_values,
-            {"remembered", "invalid_authorization"},
+            SUPPORTED_MEMORY_STATUSES,
+        )
+
+    def test_memory_token_is_exposed_only_by_memory_response(self):
+        schemas_with_memory_token = {
+            schema_name
+            for schema_name, schema in self.schemas.items()
+            if "memory_token" in _property_names(schema)
+        }
+
+        self.assertEqual(
+            schemas_with_memory_token,
+            {"ChatRequest", "MemoryResponse"},
         )
 
     def test_task_inputs_are_provider_neutral_objects(self):
@@ -270,7 +288,6 @@ class OpenAPIDocumentationTests(unittest.TestCase):
         forbidden_exact = {
             "plan_id",
             "confirm_token",
-            "memory_token",
             "to_phones",
             "calle_command",
             "api_key",
