@@ -1930,3 +1930,23 @@ This preserves D.AI.SY's architecture:
 and its mission:
 
 **Helping people become more capable—not more dependent.**
+## Gate 2 — Adaptive Memory Retrieval and Application
+
+### Added
+
+- Added retrieval of explicitly approved, client-scoped user strategies.
+- Added `memory_action="offer"` to surface an approved strategy without automatically applying it or executing an agent.
+- Added `memory_action="apply"` requiring explicit human selection of a specific `memory_id`.
+- Added server-side re-retrieval of approved memory before application so browser-supplied strategy text is not trusted as memory authority.
+- Added `memory_id` to the chat request and memory response API contracts.
+- Added observable adaptive response guidance using the approved strategy: overview, components, relationships, sequence, then supporting details.
+- Preserved human authority by separating permission to store a strategy from permission to use that strategy for a new request.
+- Preserved client isolation and fail-closed behavior for missing, unknown, or cross-client memory identifiers.
+
+### Verified
+
+- Gate 2 memory flow tests: 25 passed.
+- Memory, clarification, and clarification-decision targeted regression: 51 passed.
+- Full backend regression: 219 passed in 17.224 seconds.
+- Existing clarification behavior remains compatible with adaptive memory.
+- Known `datetime.utcnow()` deprecation warning remains non-blocking and is unchanged by this gate.

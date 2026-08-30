@@ -9,6 +9,7 @@ class ChatRequest(BaseModel):
     client_id: Optional[str] = None
     memory_action: Optional[str] = None
     memory_token: Optional[str] = None
+    memory_id: Optional[str] = None
 
 
 class ChatResponse(BaseModel):
@@ -85,7 +86,7 @@ class ClarificationResponse(BaseModel):
 
 class MemoryResponse(BaseModel):
     """
-    Public result of an explicit memory proposal or approval attempt.
+    Public result of an explicit memory operation.
 
     approval_required:
         No memory has been persisted. The response contains the exact
@@ -96,20 +97,31 @@ class MemoryResponse(BaseModel):
         The signed proposal was validated and the exact authorized
         strategy was persisted.
 
+    strategy_available:
+        An approved user-owned strategy was retrieved for this client
+        and offered for the current request. It has not been applied.
+
+    no_strategy:
+        No approved user-owned strategy is available for this client.
+
     invalid_authorization:
-        The proposal or approval request failed closed and nothing was
-        remembered.
+        The requested memory operation failed closed. Nothing was
+        remembered or applied.
     """
 
     agent: Literal["memory"]
     status: Literal[
         "approval_required",
         "remembered",
+        "strategy_available",
+        "no_strategy",
         "invalid_authorization",
     ]
     strategy: Optional[str] = None
     memory_token: Optional[str] = None
+    memory_id: Optional[str] = None
     expires_at: Optional[str] = None
+    original_message: Optional[str] = None
     message: Optional[str] = None
 
 

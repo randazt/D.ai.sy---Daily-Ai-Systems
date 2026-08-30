@@ -83,6 +83,10 @@ class ChatMemoryFlowTests(unittest.IsolatedAsyncioTestCase):
             memory_authorization=self.authorization_service,
         )
 
+    # ============================================================
+    # Gate 1: Explicit memory proposal and authorization
+    # ============================================================
+
     async def test_proposal_returns_exact_strategy_signed_token_and_expiration(
         self,
     ):
@@ -359,12 +363,8 @@ class ChatMemoryFlowTests(unittest.IsolatedAsyncioTestCase):
                 proposal["memory_token"].split(".", 1)
             )
 
-            replacement = (
-                "A" if payload_part[0] != "A" else "B"
-            )
-            tampered_payload = (
-                replacement + payload_part[1:]
-            )
+            replacement = "A" if payload_part[0] != "A" else "B"
+            tampered_payload = replacement + payload_part[1:]
             tampered_token = (
                 f"{tampered_payload}.{signature_part}"
             )
@@ -531,6 +531,225 @@ class ChatMemoryFlowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response["status"], "remembered")
         self.assertEqual(registry.planner.calls, [])
         self.assertEqual(registry.execution.calls, [])
+        self.assertEqual(registry.conversation.calls, [])
+
+    # ============================================================
+    # Gate 2: Adaptive memory
+    #
+    # Persistent approval and situational application are separate
+    # human decisions. An approved strategy may be offered, but it
+    # must never be silently applied to a new request.
+    # ============================================================
+
+    async def test_offer_returns_approved_strategy_for_same_client(self):
+        memory = self.memory_service.remember_approved_strategy(
+            client_id="client-a",
+            strategy="Show me the whole system before the details.",
+        )
+
+        service = self.create_service()
+
+        response = await service.chat(
+            "Help me understand agent orchestration.",
+            client_id="client-a",
+            memory_action="offer",
+        )
+
+        self.assertEqual(response["agent"], "memory")
+        self.assertEqual(response["status"], "strategy_available")
+        self.assertEqual(response["memory_id"], memory.id)
+        self.assertEqual(
+            response["strategy"],
+            "Show me the whole system before the details.",
+        )
+        self.assertEqual(
+            response["original_message"],
+            "Help me understand agent orchestration.",
+        )
+
+    async def test_offer_does_not_return_another_clients_strategy(self):
+        self.memory_service.remember_approved_strategy(
+            client_id="client-a",
+            strategy="Show me the whole system first.",
+        )
+
+        service = self.create_service()
+
+        response = await service.chat(
+            "Help me understand agent orchestration.",
+            client_id="client-b",
+            memory_action="offer",
+        )
+
+        self.assertEqual(response["agent"], "memory")
+        self.assertEqual(response["status"], "no_strategy")
+        self.assertNotIn("memory_id", response)
+        self.assertNotIn("strategy", response)
+
+    async def test_offer_without_approved_strategy_returns_no_strategy(self):
+        service = self.create_service()
+
+        response = await service.chat(
+            "Help me understand agent orchestration.",
+            client_id="client-a",
+            memory_action="offer",
+        )
+
+        self.assertEqual(response["agent"], "memory")
+        self.assertEqual(response["status"], "no_strategy")
+        self.assertNotIn("memory_id", response)
+        self.assertNotIn("strategy", response)
+
+    async def test_offer_without_client_id_fails_closed(self):
+        service = self.create_service()
+
+        response = await service.chat(
+            "Help me understand agent orchestration.",
+            memory_action="offer",
+        )
+
+        self.assertEqual(response["agent"], "memory")
+        self.assertEqual(response["status"], "invalid_authorization")
+
+    async def test_offer_does_not_route_or_execute_agent(self):
+        registry = RecordingRegistry()
+
+        self.memory_service.remember_approved_strategy(
+            client_id="client-a",
+            strategy="Show me the whole system first.",
+        )
+
+        service = self.create_service(
+            registry=registry,
+            router=FailingRouter(),
+        )
+
+        response = await service.chat(
+            "Help me understand agent orchestration.",
+            client_id="client-a",
+            memory_action="offer",
+        )
+
+        self.assertEqual(response["status"], "strategy_available")
+        self.assertEqual(registry.planner.calls, [])
+        self.assertEqual(registry.execution.calls, [])
+        self.assertEqual(registry.conversation.calls, [])
+
+    async def test_apply_uses_server_stored_strategy_and_runs_agent(self):
+        registry = RecordingRegistry()
+        router = StaticRouter("conversation")
+
+        memory = self.memory_service.remember_approved_strategy(
+            client_id="client-a",
+            strategy="Show me the whole system before the details.",
+        )
+
+        service = self.create_service(
+            registry=registry,
+            router=router,
+        )
+
+        response = await service.chat(
+            "Help me understand agent orchestration.",
+            client_id="client-a",
+            memory_action="apply",
+            memory_id=memory.id,
+        )
+
+        self.assertEqual(response["agent"], "conversation")
+        self.assertEqual(len(registry.conversation.calls), 1)
+
+        adapted_message = registry.conversation.calls[0]
+
+        self.assertIn(
+            "Help me understand agent orchestration.",
+            adapted_message,
+        )
+        self.assertIn(
+            "Show me the whole system before the details.",
+            adapted_message,
+        )
+        self.assertIn("overview", adapted_message.lower())
+        self.assertIn("components", adapted_message.lower())
+        self.assertIn("relationships", adapted_message.lower())
+        self.assertIn("sequence", adapted_message.lower())
+        self.assertIn("details", adapted_message.lower())
+
+    async def test_apply_rejects_memory_owned_by_another_client(self):
+        registry = RecordingRegistry()
+        router = StaticRouter("conversation")
+
+        memory = self.memory_service.remember_approved_strategy(
+            client_id="client-a",
+            strategy="Show me the whole system first.",
+        )
+
+        service = self.create_service(
+            registry=registry,
+            router=router,
+        )
+
+        response = await service.chat(
+            "Help me understand agent orchestration.",
+            client_id="client-b",
+            memory_action="apply",
+            memory_id=memory.id,
+        )
+
+        self.assertEqual(response["agent"], "memory")
+        self.assertEqual(response["status"], "invalid_authorization")
+        self.assertEqual(router.calls, [])
+        self.assertEqual(registry.conversation.calls, [])
+
+    async def test_apply_without_memory_id_fails_closed(self):
+        registry = RecordingRegistry()
+        router = StaticRouter("conversation")
+
+        self.memory_service.remember_approved_strategy(
+            client_id="client-a",
+            strategy="Show me the whole system first.",
+        )
+
+        service = self.create_service(
+            registry=registry,
+            router=router,
+        )
+
+        response = await service.chat(
+            "Help me understand agent orchestration.",
+            client_id="client-a",
+            memory_action="apply",
+        )
+
+        self.assertEqual(response["agent"], "memory")
+        self.assertEqual(response["status"], "invalid_authorization")
+        self.assertEqual(router.calls, [])
+        self.assertEqual(registry.conversation.calls, [])
+
+    async def test_apply_unknown_memory_id_fails_closed(self):
+        registry = RecordingRegistry()
+        router = StaticRouter("conversation")
+
+        self.memory_service.remember_approved_strategy(
+            client_id="client-a",
+            strategy="Show me the whole system first.",
+        )
+
+        service = self.create_service(
+            registry=registry,
+            router=router,
+        )
+
+        response = await service.chat(
+            "Help me understand agent orchestration.",
+            client_id="client-a",
+            memory_action="apply",
+            memory_id="does-not-exist",
+        )
+
+        self.assertEqual(response["agent"], "memory")
+        self.assertEqual(response["status"], "invalid_authorization")
+        self.assertEqual(router.calls, [])
         self.assertEqual(registry.conversation.calls, [])
 
 

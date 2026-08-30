@@ -23,14 +23,15 @@ class ChatService:
     ChatService is responsible for routing a request to the
     appropriate registered agent and returning that agent's result.
 
-    Explicit memory proposal and approval actions are handled before
-    normal routing so persistent user-owned memory cannot be created
-    implicitly by an agent or by ordinary conversational language.
+    Explicit memory actions are handled before normal routing.
 
-    A proposal does not persist memory. It binds the exact strategy
-    presented by the human to the exact client identity in a signed,
-    short-lived authorization token. Persistence happens only after
-    that proposal is explicitly approved.
+    A memory proposal does not persist memory. Persistence happens
+    only after explicit human approval of the signed proposal.
+
+    Approved strategies may later be offered to the same client.
+    Applying a strategy requires an explicit memory_id and current
+    user request. The stored, approved strategy is retrieved
+    server-side before use.
 
     Project state is owned by the agents and ProjectService,
     not duplicated here.
@@ -60,13 +61,15 @@ class ChatService:
         client_id: str | None = None,
         memory_action: str | None = None,
         memory_token: str | None = None,
+        memory_id: str | None = None,
     ):
         if memory_action is not None:
-            return self._handle_memory_action(
+            return await self._handle_memory_action(
                 message=message,
                 client_id=client_id,
                 memory_action=memory_action,
                 memory_token=memory_token,
+                memory_id=memory_id,
             )
 
         if clarification_token:
@@ -75,7 +78,9 @@ class ChatService:
                 clarification_token=clarification_token,
             )
 
-        # Determine which agent should handle the request
+        return await self._route_and_run(message)
+
+    async def _route_and_run(self, message: str):
         agent_name = self._router.route(message)
 
         if agent_name == "planner":
@@ -92,22 +97,19 @@ class ChatService:
                         "Please restate your goal clearly."
                     )
 
-        # Retrieve the selected agent
         agent = self._registry.get(agent_name)
-
-        # Execute the selected agent
         result = await agent.run(message)
 
-        # Return the agent result without duplicating domain state
         return result
 
-    def _handle_memory_action(
+    async def _handle_memory_action(
         self,
         *,
         message: str,
         client_id: str | None,
         memory_action: str,
         memory_token: str | None,
+        memory_id: str | None,
     ):
         if memory_action == "propose":
             return self._propose_memory_strategy(
@@ -119,6 +121,19 @@ class ChatService:
             return self._approve_memory_strategy(
                 client_id=client_id,
                 memory_token=memory_token,
+            )
+
+        if memory_action == "offer":
+            return self._offer_memory_strategy(
+                client_id=client_id,
+                original_message=message,
+            )
+
+        if memory_action == "apply":
+            return await self._apply_memory_strategy(
+                client_id=client_id,
+                memory_id=memory_id,
+                message=message,
             )
 
         return self._invalid_memory_authorization_response()
@@ -198,6 +213,118 @@ class ChatService:
             "status": "remembered",
             "strategy": memory.strategy,
         }
+
+    def _offer_memory_strategy(
+        self,
+        *,
+        client_id: str | None,
+        original_message: str,
+    ):
+        if not client_id or not client_id.strip():
+            return self._invalid_memory_authorization_response()
+
+        normalized_client_id = client_id.strip()
+
+        try:
+            memories = self._memory_manager.get_approved_strategies(
+                client_id=normalized_client_id,
+            )
+        except ValueError:
+            return self._invalid_memory_authorization_response()
+
+        if not memories:
+            return {
+                "agent": "memory",
+                "status": "no_strategy",
+                "original_message": original_message,
+                "message": (
+                    "No approved strategy is available for this client."
+                ),
+            }
+
+        memory = memories[-1]
+
+        return {
+            "agent": "memory",
+            "status": "strategy_available",
+            "memory_id": memory.id,
+            "strategy": memory.strategy,
+            "original_message": original_message,
+            "message": (
+                "You previously taught D.AI.SY this strategy. "
+                "Would you like me to use it for this request?"
+            ),
+        }
+
+    async def _apply_memory_strategy(
+        self,
+        *,
+        client_id: str | None,
+        memory_id: str | None,
+        message: str,
+    ):
+        if not client_id or not client_id.strip():
+            return self._invalid_memory_authorization_response()
+
+        if not memory_id or not memory_id.strip():
+            return self._invalid_memory_authorization_response()
+
+        if not message or not message.strip():
+            return self._invalid_memory_authorization_response()
+
+        normalized_client_id = client_id.strip()
+        normalized_memory_id = memory_id.strip()
+
+        try:
+            memories = self._memory_manager.get_approved_strategies(
+                client_id=normalized_client_id,
+            )
+        except ValueError:
+            return self._invalid_memory_authorization_response()
+
+        selected_memory = next(
+            (
+                memory
+                for memory in memories
+                if memory.id == normalized_memory_id
+            ),
+            None,
+        )
+
+        if selected_memory is None:
+            return self._invalid_memory_authorization_response()
+
+        agent_name = self._router.route(message)
+        agent = self._registry.get(agent_name)
+
+        adapted_message = self._build_adapted_message(
+            original_message=message,
+            strategy=selected_memory.strategy,
+        )
+
+        return await agent.run(adapted_message)
+
+    @staticmethod
+    def _build_adapted_message(
+        *,
+        original_message: str,
+        strategy: str,
+    ) -> str:
+        return (
+            f"User's current request:\n{original_message.strip()}\n\n"
+            f"User-approved strategy:\n{strategy.strip()}\n\n"
+            "Adapt your response using the user's approved strategy. "
+            "Make the adaptation observable by organizing the response "
+            "in this order when relevant:\n"
+            "1. Overview of the whole system\n"
+            "2. Main components\n"
+            "3. Relationships between components\n"
+            "4. Sequence or flow\n"
+            "5. Supporting details\n\n"
+            "Preserve human authority. The strategy guides how the "
+            "information is presented; it does not authorize D.AI.SY "
+            "to make consequential decisions for the user."
+        )
 
     @staticmethod
     def _invalid_memory_authorization_response():

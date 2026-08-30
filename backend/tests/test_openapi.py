@@ -27,6 +27,8 @@ SUPPORTED_DECISIONS = {
 SUPPORTED_MEMORY_STATUSES = {
     "approval_required",
     "remembered",
+    "strategy_available",
+    "no_strategy",
     "invalid_authorization",
 }
 
@@ -232,7 +234,9 @@ class OpenAPIDocumentationTests(unittest.TestCase):
             "status",
             "strategy",
             "memory_token",
+            "memory_id",
             "expires_at",
+            "original_message",
             "message",
         }
 
@@ -256,6 +260,18 @@ class OpenAPIDocumentationTests(unittest.TestCase):
 
         self.assertEqual(
             schemas_with_memory_token,
+            {"ChatRequest", "MemoryResponse"},
+        )
+
+    def test_memory_id_is_exposed_only_by_memory_contract(self):
+        schemas_with_memory_id = {
+            schema_name
+            for schema_name, schema in self.schemas.items()
+            if "memory_id" in _property_names(schema)
+        }
+
+        self.assertEqual(
+            schemas_with_memory_id,
             {"ChatRequest", "MemoryResponse"},
         )
 
@@ -320,6 +336,7 @@ class OpenAPIDocumentationTests(unittest.TestCase):
             "client_id",
             "memory_action",
             "memory_token",
+            "memory_id",
         }
         for field in optional_fields:
             with self.subTest(field=field):
