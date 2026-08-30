@@ -3,7 +3,8 @@ import type { ChatRequest, ChatResponse } from "./chatTypes";
 export async function sendChatMessage(
   request: ChatRequest,
 ): Promise<ChatResponse> {
-  const response = await fetch("/chat", {
+  const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
+  const response = await fetch(`${apiBaseUrl}/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
