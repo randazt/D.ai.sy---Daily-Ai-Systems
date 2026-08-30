@@ -365,21 +365,91 @@ function ResponseCard({
   }
 
   if (isExecutionResponse(response)) {
+    const continuation = response.continuation;
+
     return (
       <article className="message-card daisy-response">
         <div className="section-heading-row compact">
           <h3>D.AI.SY · Execution</h3>
           <StatusBadge>{response.status}</StatusBadge>
         </div>
+
         <p>
-          <strong>Current task:</strong> {response.current_task.title}
+          <strong>Authorized task:</strong> {response.current_task.title}
         </p>
         <p>{response.execution.output || response.execution.error}</p>
+
+        {response.observation ? (
+          <p>
+            <strong>Observation:</strong> {response.observation.summary}
+          </p>
+        ) : null}
+
         {response.decision ? (
           <p>
-            <strong>Decision:</strong> {response.decision.decision} —{" "}
+            <strong>Agent decision:</strong> {response.decision.decision} —{" "}
             {response.decision.reason}
           </p>
+        ) : null}
+
+        {continuation?.continue_applied &&
+        continuation.continued_task &&
+        continuation.continued_execution ? (
+          <>
+            <hr />
+            <p>
+              <strong>Bounded continuation</strong>
+            </p>
+            <p>
+              After observing the authorized task, D.AI.SY performed one
+              additional eligible reasoning step. Automatic continuation stops
+              after this step.
+            </p>
+            <p>
+              <strong>Continued task:</strong>{" "}
+              {continuation.continued_task.title}
+            </p>
+            <p>
+              {continuation.continued_execution.output ||
+                continuation.continued_execution.error}
+            </p>
+
+            {continuation.continued_observation ? (
+              <p>
+                <strong>Observation:</strong>{" "}
+                {continuation.continued_observation.summary}
+              </p>
+            ) : null}
+
+            {continuation.continued_decision ? (
+              <p>
+                <strong>Final decision:</strong>{" "}
+                {continuation.continued_decision.decision} —{" "}
+                {continuation.continued_decision.reason}
+              </p>
+            ) : null}
+
+            <p>
+              <strong>Control returned to you.</strong> No further task was
+              automatically executed.
+            </p>
+          </>
+        ) : continuation ? (
+          <>
+            <hr />
+            <p>
+              <strong>Bounded continuation</strong>
+            </p>
+            <p>
+              No automatic continuation was applied.
+              {continuation.continue_skipped_reason
+                ? ` ${continuation.continue_skipped_reason}`
+                : ""}
+            </p>
+            <p>
+              <strong>Control returned to you.</strong>
+            </p>
+          </>
         ) : null}
       </article>
     );

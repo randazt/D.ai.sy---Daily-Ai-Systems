@@ -81,6 +81,21 @@ class ChatService:
         return await self._route_and_run(message)
 
     async def _route_and_run(self, message: str):
+        cognition_first = self._clarification_gate._cognitive_bottleneck_decision(
+            message
+        )
+        if cognition_first is not None and cognition_first.needs_clarification:
+            try:
+                return self._clarification_gate.create_clarification_response(
+                    original_goal=message,
+                    question=cognition_first.question,
+                )
+            except ClarificationTokenError:
+                return self._clarification_gate.invalid_context_response(
+                    "Clarification is unavailable. "
+                    "Please restate your goal clearly."
+                )
+
         agent_name = self._router.route(message)
 
         if agent_name == "planner":

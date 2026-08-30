@@ -144,6 +144,12 @@ class ClarificationService:
         self._model_service = model_service
 
     def evaluate(self, message: str) -> ClarificationDecision:
+        cognitive_bottleneck_decision = (
+            self._cognitive_bottleneck_decision(message)
+        )
+        if cognitive_bottleneck_decision is not None:
+            return cognitive_bottleneck_decision
+
         human_decision = self._evaluate_human_decision_gate(message)
         if human_decision is not None:
             if human_decision.clarification is not None:
@@ -453,6 +459,78 @@ User message:
                 question=question,
                 missing_user_judgment="; ".join(priorities),
                 why_planning_now_would_choose_for_user=reason,
+            ),
+        )
+
+    @classmethod
+    def _cognitive_bottleneck_decision(
+        cls,
+        message: str,
+    ) -> ClarificationDecision | None:
+        text = cls._normalized_message(message)
+        if not text:
+            return None
+
+        cognition_first_phrases = (
+            "help me figure out what's actually making this hard",
+            "help me figure out what is actually making this hard",
+            "help me understand what's making this hard",
+            "help me understand what is making this hard",
+            "figure out what's making this hard",
+            "figure out what is making this hard",
+        )
+
+        explicit_cognition_first = any(
+            phrase in text
+            for phrase in cognition_first_phrases
+        )
+
+        overwhelm_markers = (
+            "everything feels equally important",
+            "everything seems equally important",
+            "everything feels important",
+            "don't know where to start",
+            "do not know where to start",
+        )
+        organizing_markers = (
+            "organizing my week",
+            "organize my week",
+            "planning my week",
+            "plan my week",
+        )
+        system_request_markers = (
+            "turn this into a simple system",
+            "turn this into a system",
+            "help me build a system",
+            "help me create a system",
+        )
+
+        everyday_overwhelm_request = (
+            any(marker in text for marker in overwhelm_markers)
+            and any(marker in text for marker in organizing_markers)
+            and any(marker in text for marker in system_request_markers)
+        )
+
+        if not explicit_cognition_first and not everyday_overwhelm_request:
+            return None
+
+        return ClarificationDecision(
+            needs_clarification=True,
+            decision="CLARIFY",
+            question=(
+                "When you look at everything you need to do, where do you "
+                "get stuck first: deciding what matters most, choosing "
+                "between things that all feel important, or holding too "
+                "many things in your head at once?"
+            ),
+            missing_user_judgment=(
+                "The user wants help understanding the cognitive bottleneck "
+                "before D.AI.SY turns it into a system or plan."
+            ),
+            why_planning_now_would_choose_for_user=(
+                "D.AI.SY should understand the bottleneck before introducing "
+                "a planning tradeoff or deciding how the problem should be "
+                "structured."
             ),
         )
 

@@ -69,6 +69,45 @@ class ClarificationFlowTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         project_service._projects.clear()
 
+    async def test_cognition_first_request_clarifies_before_conversation_routing(self):
+        registry = RecordingRegistry()
+        router = StaticRouter("conversation")
+        gate = clarification_gate()
+
+        service = ChatService(
+            agent_registry=registry,
+            agent_router=router,
+            clarification_gate=gate,
+        )
+
+        message = (
+            "I keep putting off organizing my week because everything feels "
+            "equally important and I don't know where to start. Help me turn "
+            "this into a simple system I can actually use."
+        )
+
+        with patch.dict(
+            os.environ,
+            {CLARIFICATION_TOKEN_SECRET_ENV: TEST_SECRET},
+            clear=False,
+        ):
+            response = await service.chat(message)
+
+        self.assertEqual(response["agent"], "clarification")
+        self.assertEqual(response["status"], "needs_clarification")
+        self.assertEqual(
+            response["question"],
+            (
+                "When you look at everything you need to do, where do you "
+                "get stuck first: deciding what matters most, choosing "
+                "between things that all feel important, or holding too "
+                "many things in your head at once?"
+            ),
+        )
+        self.assertEqual(registry.conversation.calls, [])
+        self.assertEqual(registry.planner.calls, [])
+        self.assertEqual(registry.execution.calls, [])
+
     async def test_ambiguous_request_returns_one_clarification_question(self):
         registry = RecordingRegistry()
         service = ChatService(
