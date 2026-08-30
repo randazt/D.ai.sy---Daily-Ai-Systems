@@ -2,10 +2,13 @@
 Agent routing for D.AI.S.Y.
 
 Determines which agent should handle an incoming request.
-Supports both:
 
-1. Explicit agent selection
-2. Natural-language intent detection
+Routing follows D.AI.SY's human-authority boundary:
+
+1. Explicit agent commands may directly select an agent.
+2. Natural-language planning intent may route to the planner.
+3. Natural-language action words do not authorize execution.
+4. Execution requires an explicit execution command.
 """
 
 
@@ -29,6 +32,12 @@ class AgentRouter:
         }:
             return "planner"
 
+        # Execution is an authority boundary.
+        #
+        # These exact commands represent an explicit request to
+        # enter the execution path. Merely mentioning words such
+        # as "run", "execute", "start", "launch", "complete", or
+        # "finish" inside normal language does not authorize action.
         if text in {
             "execution",
             "/execution",
@@ -47,28 +56,12 @@ class AgentRouter:
             return "conversation"
 
         # ----------------------------------------------------
-        # Execution intent
-        #
-        # Execution is evaluated before planning because an
-        # action verb such as "execute" or "run" should take
-        # precedence over nouns such as "project".
-        # ----------------------------------------------------
-        execution_words = [
-            "run",
-            "execute",
-            "start",
-            "launch",
-            "deploy",
-            "complete",
-            "finish",
-        ]
-
-        if any(word in text for word in execution_words):
-            return "execution"
-
-        # ----------------------------------------------------
         # Planner intent
         # ----------------------------------------------------
+        #
+        # Planning language may identify that the user wants help
+        # shaping work, but ChatService still owns the clarification
+        # gate before the planner is allowed to proceed.
         planner_words = [
             "build",
             "create",
@@ -88,6 +81,10 @@ class AgentRouter:
         # ----------------------------------------------------
         # Default
         # ----------------------------------------------------
+        #
+        # Ambiguous or general human language remains conversation.
+        # D.AI.SY should understand the person's intent before
+        # escalating toward structured planning or authorized action.
         return "conversation"
 
 

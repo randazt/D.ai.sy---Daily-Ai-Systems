@@ -1,19 +1,35 @@
 import { type FormEvent, useState } from "react";
 
 import { StatusBadge } from "../../components/ui/StatusBadge";
+import { RichText } from "../../components/ui/RichText";
 import { sendChatMessage } from "./chatApi";
 import {
   isClarificationResponse,
   isExecutionResponse,
+  isMemoryResponse,
   isPlannerResponse,
   isStatusResponse,
 } from "./chatResponse";
-import type { ChatResponse } from "./chatTypes";
+import type { ChatRequest, ChatResponse, MemoryResponse } from "./chatTypes";
 
 interface Exchange {
   id: number;
   userMessage: string;
   response: ChatResponse;
+}
+
+const CLIENT_ID_STORAGE_KEY = "daisy_client_id";
+
+function getOrCreateClientId(): string {
+  const existingClientId = window.localStorage.getItem(CLIENT_ID_STORAGE_KEY);
+
+  if (existingClientId) {
+    return existingClientId;
+  }
+
+  const clientId = crypto.randomUUID();
+  window.localStorage.setItem(CLIENT_ID_STORAGE_KEY, clientId);
+  return clientId;
 }
 
 export function Conversation() {
@@ -22,29 +38,27 @@ export function Conversation() {
   const [clarificationToken, setClarificationToken] = useState<string | null>(
     null,
   );
+  const [clientId] = useState(getOrCreateClientId);
   const [isSending, setIsSending] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const trimmedMessage = message.trim();
-    if (!trimmedMessage || isSending) return;
+  async function submitRequest(
+    request: ChatRequest,
+    displayedUserMessage: string,
+  ) {
+    if (isSending) return;
 
     setIsSending(true);
     setRequestError(null);
 
     try {
-      const response = await sendChatMessage({
-        message: trimmedMessage,
-        clarification_token: clarificationToken,
-      });
+      const response = await sendChatMessage(request);
 
       setExchanges((current) => [
         ...current,
         {
           id: Date.now(),
-          userMessage: trimmedMessage,
+          userMessage: displayedUserMessage,
           response,
         },
       ]);
@@ -59,16 +73,133 @@ export function Conversation() {
         setClarificationToken(null);
       }
 
-      setMessage("");
+      return response;
     } catch (error) {
       setRequestError(
         error instanceof Error
           ? error.message
           : "D.AI.SY could not complete the request.",
       );
+
+      return null;
     } finally {
       setIsSending(false);
     }
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage || isSending) return;
+
+    setMessage("");
+
+    await submitRequest(
+      {
+        message: trimmedMessage,
+        clarification_token: clarificationToken,
+        client_id: clientId,
+      },
+      trimmedMessage,
+    );
+  }
+
+  async function handleProposeStrategy(strategy: string) {
+    await submitRequest(
+      {
+        message: strategy,
+        client_id: clientId,
+        memory_action: "propose",
+      },
+      "Please ask before remembering this strategy.",
+    );
+  }
+
+  async function handleApproveMemory(memory: MemoryResponse) {
+    if (!memory.memory_token) {
+      setRequestError(
+        "D.AI.SY cannot remember this strategy because its approval token is missing.",
+      );
+      return;
+    }
+
+    await submitRequest(
+      {
+        message: "",
+        client_id: clientId,
+        memory_action: "approve",
+        memory_token: memory.memory_token,
+      },
+      "Remember this.",
+    );
+  }
+
+  async function handleOfferStrategy(originalMessage: string) {
+    await submitRequest(
+      {
+        message: originalMessage,
+        client_id: clientId,
+        memory_action: "offer",
+      },
+      originalMessage,
+    );
+  }
+
+  async function handleApplyStrategy(memory: MemoryResponse) {
+    if (!memory.memory_id || !memory.original_message) {
+      setRequestError(
+        "D.AI.SY cannot apply this strategy because the saved context is incomplete.",
+      );
+      return;
+    }
+
+    await submitRequest(
+      {
+        message: memory.original_message,
+        client_id: clientId,
+        memory_action: "apply",
+        memory_id: memory.memory_id,
+      },
+      "Yes, use that approach.",
+    );
+  }
+
+  async function handleUseDifferentApproach(memory: MemoryResponse) {
+    if (!memory.original_message) {
+      setRequestError(
+        "D.AI.SY cannot continue because the original request is unavailable.",
+      );
+      return;
+    }
+
+    await submitRequest(
+      {
+        message: memory.original_message,
+        client_id: clientId,
+      },
+      "Use a different approach.",
+    );
+  }
+
+  function handleDeclineMemory(exchangeId: number) {
+    setExchanges((current) =>
+      current.map((exchange) => {
+        if (exchange.id !== exchangeId) {
+          return exchange;
+        }
+
+        return {
+          ...exchange,
+          response: {
+            agent: "memory",
+            status: "no_strategy",
+            message:
+              "Not remembered. Nothing was saved. You can choose to teach D.AI.SY this strategy later.",
+          },
+        };
+      }),
+    );
   }
 
   return (
@@ -106,7 +237,18 @@ export function Conversation() {
                 <p>{exchange.userMessage}</p>
               </article>
 
-              <ResponseCard response={exchange.response} />
+              <ResponseCard
+                exchangeId={exchange.id}
+                userMessage={exchange.userMessage}
+                response={exchange.response}
+                disabled={isSending}
+                onProposeStrategy={handleProposeStrategy}
+                onApproveMemory={handleApproveMemory}
+                onDeclineMemory={handleDeclineMemory}
+                onOfferStrategy={handleOfferStrategy}
+                onApplyStrategy={handleApplyStrategy}
+                onUseDifferentApproach={handleUseDifferentApproach}
+              />
             </div>
           ))
         )}
@@ -117,6 +259,7 @@ export function Conversation() {
           {requestError}
         </p>
       ) : null}
+
       <form className="conversation-composer" onSubmit={handleSubmit}>
         <label htmlFor="daisy-message">Message D.AI.SY</label>
         <textarea
@@ -134,8 +277,8 @@ export function Conversation() {
 
         <div className="composer-footer">
           <p>
-            AI assists. You decide. This conversation is not persisted by this
-            frontend.
+            AI assists. You decide. Strategies are remembered only with your
+            explicit approval.
           </p>
           <button
             className="conversation-send"
@@ -150,7 +293,31 @@ export function Conversation() {
   );
 }
 
-function ResponseCard({ response }: { response: ChatResponse }) {
+interface ResponseCardProps {
+  exchangeId: number;
+  userMessage: string;
+  response: ChatResponse;
+  disabled: boolean;
+  onProposeStrategy: (strategy: string) => Promise<void>;
+  onApproveMemory: (memory: MemoryResponse) => Promise<void>;
+  onDeclineMemory: (exchangeId: number) => void;
+  onOfferStrategy: (originalMessage: string) => Promise<void>;
+  onApplyStrategy: (memory: MemoryResponse) => Promise<void>;
+  onUseDifferentApproach: (memory: MemoryResponse) => Promise<void>;
+}
+
+function ResponseCard({
+  exchangeId,
+  userMessage,
+  response,
+  disabled,
+  onProposeStrategy,
+  onApproveMemory,
+  onDeclineMemory,
+  onOfferStrategy,
+  onApplyStrategy,
+  onUseDifferentApproach,
+}: ResponseCardProps) {
   if (isClarificationResponse(response)) {
     return (
       <article className="message-card daisy-response">
@@ -161,6 +328,20 @@ function ResponseCard({ response }: { response: ChatResponse }) {
             "I need a little more information before continuing."}
         </p>
       </article>
+    );
+  }
+
+  if (isMemoryResponse(response)) {
+    return (
+      <MemoryCard
+        exchangeId={exchangeId}
+        response={response}
+        disabled={disabled}
+        onApproveMemory={onApproveMemory}
+        onDeclineMemory={onDeclineMemory}
+        onApplyStrategy={onApplyStrategy}
+        onUseDifferentApproach={onUseDifferentApproach}
+      />
     );
   }
 
@@ -216,10 +397,147 @@ function ResponseCard({ response }: { response: ChatResponse }) {
   return (
     <article className="message-card daisy-response">
       <h3>D.AI.SY</h3>
-      <p>
+
+      <RichText>
         {response.reply ??
           response.error ??
           "D.AI.SY returned a response without displayable text."}
+      </RichText>
+
+      {response.reply ? (
+        <div className="memory-actions">
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => void onProposeStrategy(userMessage)}
+          >
+            Remember this as a strategy
+          </button>
+
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => void onOfferStrategy(userMessage)}
+          >
+            Use a strategy I've taught D.AI.SY
+          </button>
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+interface MemoryCardProps {
+  exchangeId: number;
+  response: MemoryResponse;
+  disabled: boolean;
+  onApproveMemory: (memory: MemoryResponse) => Promise<void>;
+  onDeclineMemory: (exchangeId: number) => void;
+  onApplyStrategy: (memory: MemoryResponse) => Promise<void>;
+  onUseDifferentApproach: (memory: MemoryResponse) => Promise<void>;
+}
+
+function MemoryCard({
+  exchangeId,
+  response,
+  disabled,
+  onApproveMemory,
+  onDeclineMemory,
+  onApplyStrategy,
+  onUseDifferentApproach,
+}: MemoryCardProps) {
+  if (response.status === "approval_required") {
+    return (
+      <article className="message-card daisy-response memory-card">
+        <p className="eyebrow">A strategy that works for you</p>
+        <h3>Would you like D.AI.SY to remember this?</h3>
+        <p>{response.strategy}</p>
+        <p>
+          This is your strategy. D.AI.SY will save it only if you explicitly
+          approve.
+        </p>
+
+        <div className="memory-actions">
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => void onApproveMemory(response)}
+          >
+            Remember this
+          </button>
+
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => onDeclineMemory(exchangeId)}
+          >
+            Not now
+          </button>
+        </div>
+      </article>
+    );
+  }
+
+  if (response.status === "remembered") {
+    return (
+      <article className="message-card daisy-response memory-card">
+        <h3>✓ Remembered with your permission</h3>
+        <p>{response.strategy}</p>
+        <p>You stay in control of how D.AI.SY uses what you've taught it.</p>
+      </article>
+    );
+  }
+
+  if (response.status === "strategy_available") {
+    return (
+      <article className="message-card daisy-response memory-card">
+        <p className="eyebrow">A strategy you've taught D.AI.SY</p>
+        <h3>Would you like me to use this approach here?</h3>
+        <p>{response.strategy}</p>
+
+        <div className="memory-actions">
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => void onApplyStrategy(response)}
+          >
+            Yes, use this approach
+          </button>
+
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => void onUseDifferentApproach(response)}
+          >
+            Use a different approach
+          </button>
+        </div>
+      </article>
+    );
+  }
+
+  if (response.status === "no_strategy") {
+    return (
+      <article className="message-card daisy-response memory-card">
+        <h3>
+          {response.message?.startsWith("Not remembered")
+            ? "Not remembered"
+            : "No saved strategy yet"}
+        </h3>
+        <p>
+          {response.message ??
+            "You haven't explicitly taught D.AI.SY a strategy to use here."}
+        </p>
+      </article>
+    );
+  }
+
+  return (
+    <article className="message-card daisy-response memory-card">
+      <h3>D.AI.SY · Memory</h3>
+      <p>
+        {response.message ??
+          "D.AI.SY could not complete that memory request. Nothing was changed."}
       </p>
     </article>
   );

@@ -3,6 +3,7 @@ import type {
   ChatResponse,
   ClarificationResponse,
   ExecutionResponse,
+  MemoryResponse,
   PlannerResponse,
 } from "./chatTypes";
 
@@ -20,6 +21,12 @@ export function isExecutionResponse(
     response.agent === "execution" &&
     "current_task" in response
   );
+}
+
+export function isMemoryResponse(
+  response: ChatResponse,
+): response is MemoryResponse {
+  return "agent" in response && response.agent === "memory";
 }
 
 export function isPlannerResponse(
@@ -40,6 +47,7 @@ export function isStatusResponse(
     "agent" in response &&
     "status" in response &&
     "message" in response &&
+    response.agent !== "memory" &&
     !("project" in response)
   );
 }

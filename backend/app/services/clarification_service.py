@@ -149,6 +149,10 @@ class ClarificationService:
             if human_decision.clarification is not None:
                 return human_decision.clarification
 
+            unformed_goal_decision = self._unformed_goal_decision(message)
+            if unformed_goal_decision is not None:
+                return unformed_goal_decision
+
             sufficiency_decision = self._deterministic_sufficiency_decision(
                 message
             )
@@ -449,6 +453,67 @@ User message:
                 question=question,
                 missing_user_judgment="; ".join(priorities),
                 why_planning_now_would_choose_for_user=reason,
+            ),
+        )
+
+    @classmethod
+    def _unformed_goal_decision(
+        cls,
+        message: str,
+    ) -> ClarificationDecision | None:
+        text = cls._normalized_message(message)
+        if not text:
+            return None
+
+        if cls._has_explicit_planning_objective(text):
+            return None
+
+        exploratory_creation_markers = (
+            "idea",
+            "build",
+            "create",
+            "make",
+            "develop",
+            "start",
+        )
+        unformed_goal_markers = (
+            "all over the place",
+            "don't know what",
+            "do not know what",
+            "don't know how to turn",
+            "do not know how to turn",
+            "don't know where to start",
+            "do not know where to start",
+            "not sure what",
+            "unclear what",
+            "figure out what",
+        )
+
+        has_creation_intent = any(
+            marker in text for marker in exploratory_creation_markers
+        )
+        has_unformed_goal = any(
+            marker in text for marker in unformed_goal_markers
+        )
+
+        if not has_creation_intent or not has_unformed_goal:
+            return None
+
+        return cls._decision(
+            DECISION_CLARIFY,
+            question=(
+                "What feels clearest right now: what you want to create, "
+                "who you want it to help, or why it matters to you?"
+            ),
+            missing_user_judgment=(
+                "The user has expressed intent to create or build something, "
+                "but has not yet formed enough of the goal for planning to "
+                "begin without D.AI.S.Y. supplying the direction."
+            ),
+            why_planning_now_would_choose_for_user=(
+                "Planning now would turn an early, still-forming idea into a "
+                "specific direction before the user has established what "
+                "they want to create, who it should help, or why it matters."
             ),
         )
 

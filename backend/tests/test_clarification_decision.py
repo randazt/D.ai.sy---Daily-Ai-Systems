@@ -123,6 +123,25 @@ class ClarificationDecisionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(decision.question.count("?"), 1)
         self.assertIn("maximizing income", decision.missing_user_judgment)
 
+    def test_unformed_build_goal_clarifies_before_planning(self):
+        service = ClarificationService(
+            model_service=RecordingModelService(
+                human_gate_pass(),
+                classifier_decision(DECISION_CLEAR),
+            )
+        )
+
+        decision = service.evaluate(
+            "I have an idea for something I really want to build, but it's "
+            "still all over the place in my head. I know what I care about, "
+            "but I don't know how to turn it into something I can actually "
+            "start."
+        )
+
+        self.assertEqual(decision.decision, DECISION_CLARIFY)
+        self.assertTrue(decision.needs_clarification)
+        self.assertEqual(decision.question.count("?"), 1)
+
     def test_uncertain_but_explicit_objective_plans(self):
         service = ClarificationService(
             model_service=RecordingModelService(human_gate_pass())

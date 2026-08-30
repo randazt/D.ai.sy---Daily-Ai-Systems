@@ -669,11 +669,17 @@ class ChatMemoryFlowTests(unittest.IsolatedAsyncioTestCase):
             "Show me the whole system before the details.",
             adapted_message,
         )
-        self.assertIn("overview", adapted_message.lower())
-        self.assertIn("components", adapted_message.lower())
-        self.assertIn("relationships", adapted_message.lower())
-        self.assertIn("sequence", adapted_message.lower())
-        self.assertIn("details", adapted_message.lower())
+        self.assertIn("big-picture", adapted_message.lower())
+        self.assertIn("main components", adapted_message.lower())
+        self.assertIn("progressive disclosure", adapted_message.lower())
+        self.assertIn(
+            "choose where to go deeper",
+            adapted_message.lower(),
+        )
+        self.assertIn(
+            "do not provide every layer",
+            adapted_message.lower(),
+        )
 
     async def test_apply_rejects_memory_owned_by_another_client(self):
         registry = RecordingRegistry()

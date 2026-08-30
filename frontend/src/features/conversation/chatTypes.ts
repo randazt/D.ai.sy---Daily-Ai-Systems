@@ -1,6 +1,10 @@
 export interface ChatRequest {
   message: string;
   clarification_token?: string | null;
+  client_id?: string | null;
+  memory_action?: string | null;
+  memory_token?: string | null;
+  memory_id?: string | null;
 }
 
 export interface PlannerTask {
@@ -35,6 +39,22 @@ export interface ClarificationResponse {
   question?: string | null;
   clarification_token?: string | null;
   expires_at?: string | null;
+  message?: string | null;
+}
+
+export interface MemoryResponse {
+  agent: "memory";
+  status:
+    | "approval_required"
+    | "remembered"
+    | "strategy_available"
+    | "no_strategy"
+    | "invalid_authorization";
+  strategy?: string | null;
+  memory_token?: string | null;
+  memory_id?: string | null;
+  expires_at?: string | null;
+  original_message?: string | null;
   message?: string | null;
 }
 
@@ -114,6 +134,7 @@ export interface ConversationResponse {
 export type ChatResponse =
   | PlannerResponse
   | ClarificationResponse
+  | MemoryResponse
   | AgentStatusMessageResponse
   | ExecutionResponse
   | ConversationResponse;
